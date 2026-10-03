@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Al-Muslim</string>
+    <string name="title_activity_main">Al-Muslim</string>
+    <string name="package_name">io.github.fut0r.almuslim</string>
+    <string name="custom_url_scheme">io.github.fut0r.almuslim</string>
+</resources>

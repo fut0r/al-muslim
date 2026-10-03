@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Match src/theme/tokens.ts (dark). -->
+    <color name="brand">#6BC895</color>
+    <color name="app_background">#101311</color>
+    <color name="splash_mark">#6BC895</color>
+</resources>

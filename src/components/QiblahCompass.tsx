@@ -1,218 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import { Text } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { qiblahService, type QiblahDirection } from '@services/qiblahService';
-import { useLocation } from '@hooks/useLocation';
-import { colors } from '@theme/colors';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
+
+const SIZE = 300;
+const CENTER = SIZE / 2;
+const RADIUS = 122;
+
+function polar(angle: number, radius: number): [number, number] {
+  const radians = ((angle - 90) * Math.PI) / 180;
+  return [CENTER + radius * Math.cos(radians), CENTER + radius * Math.sin(radians)];
+}
 
 interface QiblahCompassProps {
-  onPress?: () => void;
+  /** Qiblah bearing, clockwise from true north. */
+  bearing: number;
+  /**
+   * Device heading from true north, not wrapped at 360° so the dial can turn
+   * the short way across north. Null draws a fixed north-up dial.
+   */
+  rotation: number | null;
+  /** True when the device points at the qiblah. */
+  aligned: boolean;
+  /** Short labels for N, E, S, W in the current language. */
+  cardinal: { N: string; E: string; S: string; W: string };
+  label: string;
 }
 
-export function QiblahCompass({ onPress }: QiblahCompassProps) {
-  const { location, loading } = useLocation();
-  const [qiblah, setQiblah] = useState<QiblahDirection | null>(null);
-  const rotationValue = useSharedValue(0);
+/**
+ * A compass dial. The dial turns with the device so that the fixed marker at
+ * the top always shows where the phone points; the Kaaba marker on the rim
+ * shows the qiblah. It is never mirrored for right-to-left languages.
+ */
+export function QiblahCompass({ bearing, rotation, aligned, cardinal, label }: QiblahCompassProps) {
+  const theme = useTheme();
+  const { tokens, fonts } = theme.app;
+  const live = rotation !== null;
 
-  useEffect(() => {
-    if (location?.coordinates) {
-      const qiblahDir = qiblahService.calculateQiblah(
-        location.coordinates.latitude,
-        location.coordinates.longitude
-      );
-      setQiblah(qiblahDir);
-      rotationValue.value = withSpring(qiblahDir.angle, { damping: 8 });
-    }
-  }, [location]);
-
-  const needleStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotationValue.value}deg` }],
-  }));
-
-  if (loading || !qiblah) {
-    return (
-      <Animated.View entering={FadeIn} style={styles.cardWrapper}>
-        <LinearGradient
-          colors={[colors.primary, colors.primaryDark]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.card}
-        >
-          <Text style={styles.loadingText}>Loading Qiblah Direction...</Text>
-        </LinearGradient>
-      </Animated.View>
-    );
-  }
+  const accent = tokens.primary;
+  const [markerX, markerY] = polar(bearing, RADIUS);
+  const [lineX, lineY] = polar(bearing, RADIUS - 20);
+  const ticks = Array.from({ length: 72 }, (_, index) => index * 5);
+  const labels: Array<[string, number]> = [
+    [cardinal.N, 0],
+    [cardinal.E, 90],
+    [cardinal.S, 180],
+    [cardinal.W, 270],
+  ];
 
   return (
-    <Animated.View entering={FadeIn} style={styles.cardWrapper}>
-      <Pressable onPress={onPress}>
-        <LinearGradient
-          colors={[colors.primary, colors.primaryDark]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.card}
-        >
-          <Text style={styles.cardTitle}>🕌 Qiblah Direction</Text>
-
-          <View style={styles.compassOuter}>
-            <View style={styles.compass}>
-              <View style={[styles.directionLabel, styles.north]}>
-                <Text style={styles.directionText}>N</Text>
-              </View>
-              <View style={[styles.directionLabel, styles.east]}>
-                <Text style={styles.directionText}>E</Text>
-              </View>
-              <View style={[styles.directionLabel, styles.south]}>
-                <Text style={styles.directionText}>S</Text>
-              </View>
-              <View style={[styles.directionLabel, styles.west]}>
-                <Text style={styles.directionText}>W</Text>
-              </View>
-
-              <Animated.View style={[styles.needle, needleStyle]}>
-                <View style={styles.needleHead} />
-              </Animated.View>
-            </View>
-          </View>
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Direction</Text>
-              <Text style={styles.infoValue}>{qiblah.direction}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Angle</Text>
-              <Text style={styles.infoValue}>{qiblahService.formatAngle(qiblah.angle)}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.cardDescription}>
-            Point towards Kaaba
-          </Text>
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
+    <Box
+      component="svg"
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      role="img"
+      aria-label={label}
+      sx={{ width: 'min(78vw, 46vh, 340px)', height: 'auto', display: 'block', mx: 'auto', overflow: 'visible' }}
+    >
+      {live && (
+        <path
+          d={`M${CENTER} ${CENTER - RADIUS - 2} l-9 -16 h18 z`}
+          fill={aligned ? accent : tokens.text}
+          stroke={tokens.background}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      )}
+      <g
+        style={{
+          transform: `rotate(${-(rotation ?? 0)}deg)`,
+          transformOrigin: `${CENTER}px ${CENTER}px`,
+          transition: live ? 'transform 140ms linear' : 'none',
+        }}
+      >
+        <circle
+          cx={CENTER}
+          cy={CENTER}
+          r={RADIUS}
+          fill={tokens.surface}
+          stroke={aligned ? accent : tokens.divider}
+          strokeWidth={aligned ? 3 : 1.5}
+        />
+        {ticks.map((angle) => {
+          const major = angle % 30 === 0;
+          const [x1, y1] = polar(angle, RADIUS - 6);
+          const [x2, y2] = polar(angle, RADIUS - (major ? 16 : 11));
+          return (
+            <line
+              key={angle}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={major ? tokens.textSecondary : tokens.divider}
+              strokeWidth={major ? 1.5 : 1}
+            />
+          );
+        })}
+        {labels.map(([text, angle]) => {
+          const [x, y] = polar(angle, RADIUS - 36);
+          return (
+            <text
+              key={angle}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontFamily={fonts.heading}
+              fontSize="17"
+              fontWeight={angle === 0 ? 700 : 500}
+              fill={angle === 0 ? tokens.text : tokens.textSecondary}
+              transform={`rotate(${angle} ${x} ${y})`}
+            >
+              {text}
+            </text>
+          );
+        })}
+        <line x1={CENTER} y1={CENTER} x2={lineX} y2={lineY} stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx={CENTER} cy={CENTER} r="5" fill={accent} />
+        {/* The Kaaba marker, kept upright relative to the dial. */}
+        <g transform={`translate(${markerX} ${markerY}) rotate(${bearing})`}>
+          <circle r="19" fill={accent} stroke={tokens.surface} strokeWidth="3" />
+          <path
+            transform="translate(-10 -10.4) scale(0.833)"
+            d="M4 7.2 12 4l8 3.2v10.6L12 21l-8-3.2V7.2Zm2 1.5v1.6l6 2.4 6-2.4V8.7l-6 2.4-6-2.4Z"
+            fill={tokens.onPrimary}
+          />
+        </g>
+      </g>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  cardWrapper: {
-    marginBottom: 16,
-  },
-  card: {
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  loadingText: {
-    color: colors.white,
-    fontSize: 14,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  cardTitle: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  compassOuter: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 'auto',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    alignSelf: 'center',
-  },
-  compass: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    position: 'relative',
-  },
-  directionLabel: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  north: {
-    top: 8,
-  },
-  east: {
-    right: 8,
-  },
-  south: {
-    bottom: 8,
-  },
-  west: {
-    left: 8,
-  },
-  directionText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  needle: {
-    width: 6,
-    height: 100,
-    backgroundColor: '#ff4444',
-    borderRadius: 3,
-    position: 'absolute',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  needleHead: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.white,
-    marginTop: 4,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
-  },
-  infoItem: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  infoLabel: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  infoValue: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  cardDescription: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 12,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-});

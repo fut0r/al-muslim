@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Al-Muslim mark for the system splash screen. Same geometry as
+    public/logo-mark.svg, kept inside the central circle the system shows.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+    <group
+        android:scaleX="0.42"
+        android:scaleY="0.42"
+        android:translateX="144"
+        android:translateY="144">
+        <group android:rotation="-35">
+            <group android:translateX="24">
+                <path
+                    android:fillColor="@color/splash_mark"
+                    android:pathData="M102.93,-109.11A150,150 0 1 0 102.93,109.11A118,118 0 1 1 102.93,-109.11Z"
+                    android:strokeColor="@color/splash_mark"
+                    android:strokeLineJoin="round"
+                    android:strokeWidth="10" />
+                <path
+                    android:fillColor="@color/splash_mark"
+                    android:pathData="M33,0a27,27 0 1,0 54,0a27,27 0 1,0 -54,0Z" />
+            </group>
+        </group>
+    </group>
+</vector>

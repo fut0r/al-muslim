@@ -1,0 +1,914 @@
+[
+ {
+  "id": 1,
+  "name": "الفاتحة",
+  "englishName": "Al-Fatihah",
+  "meaning": "The Opener",
+  "revelation": "meccan",
+  "ayahs": 7
+ },
+ {
+  "id": 2,
+  "name": "البقرة",
+  "englishName": "Al-Baqarah",
+  "meaning": "The Cow",
+  "revelation": "medinan",
+  "ayahs": 286
+ },
+ {
+  "id": 3,
+  "name": "آل عمران",
+  "englishName": "Ali 'Imran",
+  "meaning": "Family of Imran",
+  "revelation": "medinan",
+  "ayahs": 200
+ },
+ {
+  "id": 4,
+  "name": "النساء",
+  "englishName": "An-Nisa",
+  "meaning": "The Women",
+  "revelation": "medinan",
+  "ayahs": 176
+ },
+ {
+  "id": 5,
+  "name": "المائدة",
+  "englishName": "Al-Ma'idah",
+  "meaning": "The Table Spread",
+  "revelation": "medinan",
+  "ayahs": 120
+ },
+ {
+  "id": 6,
+  "name": "الأنعام",
+  "englishName": "Al-An'am",
+  "meaning": "The Cattle",
+  "revelation": "meccan",
+  "ayahs": 165
+ },
+ {
+  "id": 7,
+  "name": "الأعراف",
+  "englishName": "Al-A'raf",
+  "meaning": "The Heights",
+  "revelation": "meccan",
+  "ayahs": 206
+ },
+ {
+  "id": 8,
+  "name": "الأنفال",
+  "englishName": "Al-Anfal",
+  "meaning": "The Spoils of War",
+  "revelation": "medinan",
+  "ayahs": 75
+ },
+ {
+  "id": 9,
+  "name": "التوبة",
+  "englishName": "At-Tawbah",
+  "meaning": "The Repentance",
+  "revelation": "medinan",
+  "ayahs": 129
+ },
+ {
+  "id": 10,
+  "name": "يونس",
+  "englishName": "Yunus",
+  "meaning": "Jonah",
+  "revelation": "meccan",
+  "ayahs": 109
+ },
+ {
+  "id": 11,
+  "name": "هود",
+  "englishName": "Hud",
+  "meaning": "Hud",
+  "revelation": "meccan",
+  "ayahs": 123
+ },
+ {
+  "id": 12,
+  "name": "يوسف",
+  "englishName": "Yusuf",
+  "meaning": "Joseph",
+  "revelation": "meccan",
+  "ayahs": 111
+ },
+ {
+  "id": 13,
+  "name": "الرعد",
+  "englishName": "Ar-Ra'd",
+  "meaning": "The Thunder",
+  "revelation": "medinan",
+  "ayahs": 43
+ },
+ {
+  "id": 14,
+  "name": "إبراهيم",
+  "englishName": "Ibrahim",
+  "meaning": "Abraham",
+  "revelation": "meccan",
+  "ayahs": 52
+ },
+ {
+  "id": 15,
+  "name": "الحجر",
+  "englishName": "Al-Hijr",
+  "meaning": "The Rocky Tract",
+  "revelation": "meccan",
+  "ayahs": 99
+ },
+ {
+  "id": 16,
+  "name": "النحل",
+  "englishName": "An-Nahl",
+  "meaning": "The Bee",
+  "revelation": "meccan",
+  "ayahs": 128
+ },
+ {
+  "id": 17,
+  "name": "الإسراء",
+  "englishName": "Al-Isra",
+  "meaning": "The Night Journey",
+  "revelation": "meccan",
+  "ayahs": 111
+ },
+ {
+  "id": 18,
+  "name": "الكهف",
+  "englishName": "Al-Kahf",
+  "meaning": "The Cave",
+  "revelation": "meccan",
+  "ayahs": 110
+ },
+ {
+  "id": 19,
+  "name": "مريم",
+  "englishName": "Maryam",
+  "meaning": "Mary",
+  "revelation": "meccan",
+  "ayahs": 98
+ },
+ {
+  "id": 20,
+  "name": "طه",
+  "englishName": "Taha",
+  "meaning": "Ta-Ha",
+  "revelation": "meccan",
+  "ayahs": 135
+ },
+ {
+  "id": 21,
+  "name": "الأنبياء",
+  "englishName": "Al-Anbya",
+  "meaning": "The Prophets",
+  "revelation": "meccan",
+  "ayahs": 112
+ },
+ {
+  "id": 22,
+  "name": "الحج",
+  "englishName": "Al-Hajj",
+  "meaning": "The Pilgrimage",
+  "revelation": "medinan",
+  "ayahs": 78
+ },
+ {
+  "id": 23,
+  "name": "المؤمنون",
+  "englishName": "Al-Mu'minun",
+  "meaning": "The Believers",
+  "revelation": "meccan",
+  "ayahs": 118
+ },
+ {
+  "id": 24,
+  "name": "النور",
+  "englishName": "An-Nur",
+  "meaning": "The Light",
+  "revelation": "medinan",
+  "ayahs": 64
+ },
+ {
+  "id": 25,
+  "name": "الفرقان",
+  "englishName": "Al-Furqan",
+  "meaning": "The Criterion",
+  "revelation": "meccan",
+  "ayahs": 77
+ },
+ {
+  "id": 26,
+  "name": "الشعراء",
+  "englishName": "Ash-Shu'ara",
+  "meaning": "The Poets",
+  "revelation": "meccan",
+  "ayahs": 227
+ },
+ {
+  "id": 27,
+  "name": "النمل",
+  "englishName": "An-Naml",
+  "meaning": "The Ant",
+  "revelation": "meccan",
+  "ayahs": 93
+ },
+ {
+  "id": 28,
+  "name": "القصص",
+  "englishName": "Al-Qasas",
+  "meaning": "The Stories",
+  "revelation": "meccan",
+  "ayahs": 88
+ },
+ {
+  "id": 29,
+  "name": "العنكبوت",
+  "englishName": "Al-'Ankabut",
+  "meaning": "The Spider",
+  "revelation": "meccan",
+  "ayahs": 69
+ },
+ {
+  "id": 30,
+  "name": "الروم",
+  "englishName": "Ar-Rum",
+  "meaning": "The Romans",
+  "revelation": "meccan",
+  "ayahs": 60
+ },
+ {
+  "id": 31,
+  "name": "لقمان",
+  "englishName": "Luqman",
+  "meaning": "Luqman",
+  "revelation": "meccan",
+  "ayahs": 34
+ },
+ {
+  "id": 32,
+  "name": "السجدة",
+  "englishName": "As-Sajdah",
+  "meaning": "The Prostration",
+  "revelation": "meccan",
+  "ayahs": 30
+ },
+ {
+  "id": 33,
+  "name": "الأحزاب",
+  "englishName": "Al-Ahzab",
+  "meaning": "The Combined Forces",
+  "revelation": "medinan",
+  "ayahs": 73
+ },
+ {
+  "id": 34,
+  "name": "سبأ",
+  "englishName": "Saba",
+  "meaning": "Sheba",
+  "revelation": "meccan",
+  "ayahs": 54
+ },
+ {
+  "id": 35,
+  "name": "فاطر",
+  "englishName": "Fatir",
+  "meaning": "Originator",
+  "revelation": "meccan",
+  "ayahs": 45
+ },
+ {
+  "id": 36,
+  "name": "يس",
+  "englishName": "Ya-Sin",
+  "meaning": "Ya Sin",
+  "revelation": "meccan",
+  "ayahs": 83
+ },
+ {
+  "id": 37,
+  "name": "الصافات",
+  "englishName": "As-Saffat",
+  "meaning": "Those who set the Ranks",
+  "revelation": "meccan",
+  "ayahs": 182
+ },
+ {
+  "id": 38,
+  "name": "ص",
+  "englishName": "Sad",
+  "meaning": "The Letter \"Saad\"",
+  "revelation": "meccan",
+  "ayahs": 88
+ },
+ {
+  "id": 39,
+  "name": "الزمر",
+  "englishName": "Az-Zumar",
+  "meaning": "The Troops",
+  "revelation": "meccan",
+  "ayahs": 75
+ },
+ {
+  "id": 40,
+  "name": "غافر",
+  "englishName": "Ghafir",
+  "meaning": "The Forgiver",
+  "revelation": "meccan",
+  "ayahs": 85
+ },
+ {
+  "id": 41,
+  "name": "فصلت",
+  "englishName": "Fussilat",
+  "meaning": "Explained in Detail",
+  "revelation": "meccan",
+  "ayahs": 54
+ },
+ {
+  "id": 42,
+  "name": "الشورى",
+  "englishName": "Ash-Shuraa",
+  "meaning": "The Consultation",
+  "revelation": "meccan",
+  "ayahs": 53
+ },
+ {
+  "id": 43,
+  "name": "الزخرف",
+  "englishName": "Az-Zukhruf",
+  "meaning": "The Ornaments of Gold",
+  "revelation": "meccan",
+  "ayahs": 89
+ },
+ {
+  "id": 44,
+  "name": "الدخان",
+  "englishName": "Ad-Dukhan",
+  "meaning": "The Smoke",
+  "revelation": "meccan",
+  "ayahs": 59
+ },
+ {
+  "id": 45,
+  "name": "الجاثية",
+  "englishName": "Al-Jathiyah",
+  "meaning": "The Crouching",
+  "revelation": "meccan",
+  "ayahs": 37
+ },
+ {
+  "id": 46,
+  "name": "الأحقاف",
+  "englishName": "Al-Ahqaf",
+  "meaning": "The Wind-Curved Sandhills",
+  "revelation": "meccan",
+  "ayahs": 35
+ },
+ {
+  "id": 47,
+  "name": "محمد",
+  "englishName": "Muhammad",
+  "meaning": "Muhammad",
+  "revelation": "medinan",
+  "ayahs": 38
+ },
+ {
+  "id": 48,
+  "name": "الفتح",
+  "englishName": "Al-Fath",
+  "meaning": "The Victory",
+  "revelation": "medinan",
+  "ayahs": 29
+ },
+ {
+  "id": 49,
+  "name": "الحجرات",
+  "englishName": "Al-Hujurat",
+  "meaning": "The Rooms",
+  "revelation": "medinan",
+  "ayahs": 18
+ },
+ {
+  "id": 50,
+  "name": "ق",
+  "englishName": "Qaf",
+  "meaning": "The Letter \"Qaf\"",
+  "revelation": "meccan",
+  "ayahs": 45
+ },
+ {
+  "id": 51,
+  "name": "الذاريات",
+  "englishName": "Adh-Dhariyat",
+  "meaning": "The Winnowing Winds",
+  "revelation": "meccan",
+  "ayahs": 60
+ },
+ {
+  "id": 52,
+  "name": "الطور",
+  "englishName": "At-Tur",
+  "meaning": "The Mount",
+  "revelation": "meccan",
+  "ayahs": 49
+ },
+ {
+  "id": 53,
+  "name": "النجم",
+  "englishName": "An-Najm",
+  "meaning": "The Star",
+  "revelation": "meccan",
+  "ayahs": 62
+ },
+ {
+  "id": 54,
+  "name": "القمر",
+  "englishName": "Al-Qamar",
+  "meaning": "The Moon",
+  "revelation": "meccan",
+  "ayahs": 55
+ },
+ {
+  "id": 55,
+  "name": "الرحمن",
+  "englishName": "Ar-Rahman",
+  "meaning": "The Beneficent",
+  "revelation": "medinan",
+  "ayahs": 78
+ },
+ {
+  "id": 56,
+  "name": "الواقعة",
+  "englishName": "Al-Waqi'ah",
+  "meaning": "The Inevitable",
+  "revelation": "meccan",
+  "ayahs": 96
+ },
+ {
+  "id": 57,
+  "name": "الحديد",
+  "englishName": "Al-Hadid",
+  "meaning": "The Iron",
+  "revelation": "medinan",
+  "ayahs": 29
+ },
+ {
+  "id": 58,
+  "name": "المجادلة",
+  "englishName": "Al-Mujadila",
+  "meaning": "The Pleading Woman",
+  "revelation": "medinan",
+  "ayahs": 22
+ },
+ {
+  "id": 59,
+  "name": "الحشر",
+  "englishName": "Al-Hashr",
+  "meaning": "The Exile",
+  "revelation": "medinan",
+  "ayahs": 24
+ },
+ {
+  "id": 60,
+  "name": "الممتحنة",
+  "englishName": "Al-Mumtahanah",
+  "meaning": "She that is to be examined",
+  "revelation": "medinan",
+  "ayahs": 13
+ },
+ {
+  "id": 61,
+  "name": "الصف",
+  "englishName": "As-Saf",
+  "meaning": "The Ranks",
+  "revelation": "medinan",
+  "ayahs": 14
+ },
+ {
+  "id": 62,
+  "name": "الجمعة",
+  "englishName": "Al-Jumu'ah",
+  "meaning": "The Congregation, Friday",
+  "revelation": "medinan",
+  "ayahs": 11
+ },
+ {
+  "id": 63,
+  "name": "المنافقون",
+  "englishName": "Al-Munafiqun",
+  "meaning": "The Hypocrites",
+  "revelation": "medinan",
+  "ayahs": 11
+ },
+ {
+  "id": 64,
+  "name": "التغابن",
+  "englishName": "At-Taghabun",
+  "meaning": "The Mutual Disillusion",
+  "revelation": "medinan",
+  "ayahs": 18
+ },
+ {
+  "id": 65,
+  "name": "الطلاق",
+  "englishName": "At-Talaq",
+  "meaning": "The Divorce",
+  "revelation": "medinan",
+  "ayahs": 12
+ },
+ {
+  "id": 66,
+  "name": "التحريم",
+  "englishName": "At-Tahrim",
+  "meaning": "The Prohibition",
+  "revelation": "medinan",
+  "ayahs": 12
+ },
+ {
+  "id": 67,
+  "name": "الملك",
+  "englishName": "Al-Mulk",
+  "meaning": "The Sovereignty",
+  "revelation": "meccan",
+  "ayahs": 30
+ },
+ {
+  "id": 68,
+  "name": "القلم",
+  "englishName": "Al-Qalam",
+  "meaning": "The Pen",
+  "revelation": "meccan",
+  "ayahs": 52
+ },
+ {
+  "id": 69,
+  "name": "الحاقة",
+  "englishName": "Al-Haqqah",
+  "meaning": "The Reality",
+  "revelation": "meccan",
+  "ayahs": 52
+ },
+ {
+  "id": 70,
+  "name": "المعارج",
+  "englishName": "Al-Ma'arij",
+  "meaning": "The Ascending Stairways",
+  "revelation": "meccan",
+  "ayahs": 44
+ },
+ {
+  "id": 71,
+  "name": "نوح",
+  "englishName": "Nuh",
+  "meaning": "Noah",
+  "revelation": "meccan",
+  "ayahs": 28
+ },
+ {
+  "id": 72,
+  "name": "الجن",
+  "englishName": "Al-Jinn",
+  "meaning": "The Jinn",
+  "revelation": "meccan",
+  "ayahs": 28
+ },
+ {
+  "id": 73,
+  "name": "المزمل",
+  "englishName": "Al-Muzzammil",
+  "meaning": "The Enshrouded One",
+  "revelation": "meccan",
+  "ayahs": 20
+ },
+ {
+  "id": 74,
+  "name": "المدثر",
+  "englishName": "Al-Muddaththir",
+  "meaning": "The Cloaked One",
+  "revelation": "meccan",
+  "ayahs": 56
+ },
+ {
+  "id": 75,
+  "name": "القيامة",
+  "englishName": "Al-Qiyamah",
+  "meaning": "The Resurrection",
+  "revelation": "meccan",
+  "ayahs": 40
+ },
+ {
+  "id": 76,
+  "name": "الإنسان",
+  "englishName": "Al-Insan",
+  "meaning": "The Man",
+  "revelation": "medinan",
+  "ayahs": 31
+ },
+ {
+  "id": 77,
+  "name": "المرسلات",
+  "englishName": "Al-Mursalat",
+  "meaning": "The Emissaries",
+  "revelation": "meccan",
+  "ayahs": 50
+ },
+ {
+  "id": 78,
+  "name": "النبأ",
+  "englishName": "An-Naba",
+  "meaning": "The Tidings",
+  "revelation": "meccan",
+  "ayahs": 40
+ },
+ {
+  "id": 79,
+  "name": "النازعات",
+  "englishName": "An-Nazi'at",
+  "meaning": "Those who drag forth",
+  "revelation": "meccan",
+  "ayahs": 46
+ },
+ {
+  "id": 80,
+  "name": "عبس",
+  "englishName": "'Abasa",
+  "meaning": "He Frowned",
+  "revelation": "meccan",
+  "ayahs": 42
+ },
+ {
+  "id": 81,
+  "name": "التكوير",
+  "englishName": "At-Takwir",
+  "meaning": "The Overthrowing",
+  "revelation": "meccan",
+  "ayahs": 29
+ },
+ {
+  "id": 82,
+  "name": "الانفطار",
+  "englishName": "Al-Infitar",
+  "meaning": "The Cleaving",
+  "revelation": "meccan",
+  "ayahs": 19
+ },
+ {
+  "id": 83,
+  "name": "المطففين",
+  "englishName": "Al-Mutaffifin",
+  "meaning": "The Defrauding",
+  "revelation": "meccan",
+  "ayahs": 36
+ },
+ {
+  "id": 84,
+  "name": "الانشقاق",
+  "englishName": "Al-Inshiqaq",
+  "meaning": "The Sundering",
+  "revelation": "meccan",
+  "ayahs": 25
+ },
+ {
+  "id": 85,
+  "name": "البروج",
+  "englishName": "Al-Buruj",
+  "meaning": "The Mansions of the Stars",
+  "revelation": "meccan",
+  "ayahs": 22
+ },
+ {
+  "id": 86,
+  "name": "الطارق",
+  "englishName": "At-Tariq",
+  "meaning": "The Nightcommer",
+  "revelation": "meccan",
+  "ayahs": 17
+ },
+ {
+  "id": 87,
+  "name": "الأعلى",
+  "englishName": "Al-A'la",
+  "meaning": "The Most High",
+  "revelation": "meccan",
+  "ayahs": 19
+ },
+ {
+  "id": 88,
+  "name": "الغاشية",
+  "englishName": "Al-Ghashiyah",
+  "meaning": "The Overwhelming",
+  "revelation": "meccan",
+  "ayahs": 26
+ },
+ {
+  "id": 89,
+  "name": "الفجر",
+  "englishName": "Al-Fajr",
+  "meaning": "The Dawn",
+  "revelation": "meccan",
+  "ayahs": 30
+ },
+ {
+  "id": 90,
+  "name": "البلد",
+  "englishName": "Al-Balad",
+  "meaning": "The City",
+  "revelation": "meccan",
+  "ayahs": 20
+ },
+ {
+  "id": 91,
+  "name": "الشمس",
+  "englishName": "Ash-Shams",
+  "meaning": "The Sun",
+  "revelation": "meccan",
+  "ayahs": 15
+ },
+ {
+  "id": 92,
+  "name": "الليل",
+  "englishName": "Al-Layl",
+  "meaning": "The Night",
+  "revelation": "meccan",
+  "ayahs": 21
+ },
+ {
+  "id": 93,
+  "name": "الضحى",
+  "englishName": "Ad-Duhaa",
+  "meaning": "The Morning Hours",
+  "revelation": "meccan",
+  "ayahs": 11
+ },
+ {
+  "id": 94,
+  "name": "الشرح",
+  "englishName": "Ash-Sharh",
+  "meaning": "The Relief",
+  "revelation": "meccan",
+  "ayahs": 8
+ },
+ {
+  "id": 95,
+  "name": "التين",
+  "englishName": "At-Tin",
+  "meaning": "The Fig",
+  "revelation": "meccan",
+  "ayahs": 8
+ },
+ {
+  "id": 96,
+  "name": "العلق",
+  "englishName": "Al-'Alaq",
+  "meaning": "The Clot",
+  "revelation": "meccan",
+  "ayahs": 19
+ },
+ {
+  "id": 97,
+  "name": "القدر",
+  "englishName": "Al-Qadr",
+  "meaning": "The Power",
+  "revelation": "meccan",
+  "ayahs": 5
+ },
+ {
+  "id": 98,
+  "name": "البينة",
+  "englishName": "Al-Bayyinah",
+  "meaning": "The Clear Proof",
+  "revelation": "medinan",
+  "ayahs": 8
+ },
+ {
+  "id": 99,
+  "name": "الزلزلة",
+  "englishName": "Az-Zalzalah",
+  "meaning": "The Earthquake",
+  "revelation": "medinan",
+  "ayahs": 8
+ },
+ {
+  "id": 100,
+  "name": "العاديات",
+  "englishName": "Al-'Adiyat",
+  "meaning": "The Courser",
+  "revelation": "meccan",
+  "ayahs": 11
+ },
+ {
+  "id": 101,
+  "name": "القارعة",
+  "englishName": "Al-Qari'ah",
+  "meaning": "The Calamity",
+  "revelation": "meccan",
+  "ayahs": 11
+ },
+ {
+  "id": 102,
+  "name": "التكاثر",
+  "englishName": "At-Takathur",
+  "meaning": "The Rivalry in world increase",
+  "revelation": "meccan",
+  "ayahs": 8
+ },
+ {
+  "id": 103,
+  "name": "العصر",
+  "englishName": "Al-'Asr",
+  "meaning": "The Declining Day",
+  "revelation": "meccan",
+  "ayahs": 3
+ },
+ {
+  "id": 104,
+  "name": "الهمزة",
+  "englishName": "Al-Humazah",
+  "meaning": "The Traducer",
+  "revelation": "meccan",
+  "ayahs": 9
+ },
+ {
+  "id": 105,
+  "name": "الفيل",
+  "englishName": "Al-Fil",
+  "meaning": "The Elephant",
+  "revelation": "meccan",
+  "ayahs": 5
+ },
+ {
+  "id": 106,
+  "name": "قريش",
+  "englishName": "Quraysh",
+  "meaning": "Quraysh",
+  "revelation": "meccan",
+  "ayahs": 4
+ },
+ {
+  "id": 107,
+  "name": "الماعون",
+  "englishName": "Al-Ma'un",
+  "meaning": "The Small kindnesses",
+  "revelation": "meccan",
+  "ayahs": 7
+ },
+ {
+  "id": 108,
+  "name": "الكوثر",
+  "englishName": "Al-Kawthar",
+  "meaning": "The Abundance",
+  "revelation": "meccan",
+  "ayahs": 3
+ },
+ {
+  "id": 109,
+  "name": "الكافرون",
+  "englishName": "Al-Kafirun",
+  "meaning": "The Disbelievers",
+  "revelation": "meccan",
+  "ayahs": 6
+ },
+ {
+  "id": 110,
+  "name": "النصر",
+  "englishName": "An-Nasr",
+  "meaning": "The Divine Support",
+  "revelation": "medinan",
+  "ayahs": 3
+ },
+ {
+  "id": 111,
+  "name": "المسد",
+  "englishName": "Al-Masad",
+  "meaning": "The Palm Fiber",
+  "revelation": "meccan",
+  "ayahs": 5
+ },
+ {
+  "id": 112,
+  "name": "الإخلاص",
+  "englishName": "Al-Ikhlas",
+  "meaning": "The Sincerity",
+  "revelation": "meccan",
+  "ayahs": 4
+ },
+ {
+  "id": 113,
+  "name": "الفلق",
+  "englishName": "Al-Falaq",
+  "meaning": "The Daybreak",
+  "revelation": "meccan",
+  "ayahs": 5
+ },
+ {
+  "id": 114,
+  "name": "الناس",
+  "englishName": "An-Nas",
+  "meaning": "Mankind",
+  "revelation": "meccan",
+  "ayahs": 6
+ }
+]

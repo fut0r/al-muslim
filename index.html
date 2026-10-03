@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Everything is served from this origin: no CDNs, analytics or trackers. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#F6F7F4" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Al-Muslim: prayer times, Quran, adhkar, qiblah and Hijri calendar. Private, offline and open source."
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Al-Muslim" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <title>Al-Muslim</title>
+    <style>
+      html { background: #f6f7f4; color: #1c6b4a; }
+      html[data-mode='dark'] { background: #101311; color: #6bc895; }
+      html[data-mode='amoled'] { background: #000000; color: #6bc895; }
+      body { margin: 0; }
+      /* First paint: the mark, centred, until the app mounts and replaces it. */
+      .boot { position: fixed; inset: 0; display: grid; place-items: center; }
+      .boot svg { width: 88px; height: 88px; fill: currentColor; stroke: currentColor; }
+    </style>
+    <script src="boot.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot" aria-hidden="true">
+        <svg viewBox="56 56 400 400">
+          <g transform="translate(256 256) rotate(-35) translate(24 0)">
+            <path
+              d="M102.93 -109.11A150 150 0 1 0 102.93 109.11A118 118 0 1 1 102.93 -109.11Z"
+              stroke-width="10"
+              stroke-linejoin="round"
+            />
+            <circle cx="60" cy="0" r="27" />
+          </g>
+        </svg>
+      </div>
+    </div>
+    <noscript>Al-Muslim needs JavaScript to run.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
