@@ -26,10 +26,24 @@ concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # SHA-256 of the certificate that releases are signed with (CN=Zyad Mohamed).
+  # It is public. A release build signed with any other key is rejected.
+  RELEASE_CERTIFICATE_SHA256: ee546b4be0ffed2fc2b1f102e2d17d38d54bc203c8df0a93dad94c6e431a22a0
+
 jobs:
   apk:
     name: Build APK
     runs-on: ubuntu-latest
+    env:
+      # Optional. With these repository secrets the release build is signed
+      # with the developer's own key, so every build installs over the one
+      # before it. Without them (a fork, say) it is left unsigned and only the
+      # debug APK is uploaded. See the README.
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -50,13 +64,28 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # The release build is assembled too (unsigned), so that a problem that
+      # The release build is assembled on every push, so that a problem that
       # only shows there is caught here and not when a version is tagged.
-      - name: Assemble the debug APK and check the release build
+      - name: Assemble the debug and release APKs
         working-directory: android
         run: |
           chmod +x gradlew
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          fi
           ./gradlew assembleDebug assembleRelease --no-daemon
+
+      - name: Check that the release APK is signed with the developer's key
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          apksigner="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)"
+          certificates="$("$apksigner" verify --print-certs android/app/build/outputs/apk/release/app-release.apk)"
+          echo "$certificates"
+          if ! echo "$certificates" | grep -qi "SHA-256 digest: $RELEASE_CERTIFICATE_SHA256"; then
+            echo "::error::The release APK is not signed with the expected certificate"
+            exit 1
+          fi
 
       # Prayer notifications and background recitation depend on these, so
       # check what the finished APK really declares.
@@ -76,6 +105,14 @@ jobs:
         with:
           name: al-muslim-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+
+      # Signed with the developer's key: installs over any earlier signed build.
+      - uses: actions/upload-artifact@v4
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        with:
+          name: al-muslim-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 
   release:
@@ -125,6 +162,17 @@ jobs:
           else
             ./gradlew assembleDebug --no-daemon
             cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/al-muslim-$GITHUB_REF_NAME-debug.apk"
+          fi
+
+      - name: Check that the release APK is signed with the developer's key
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          apksigner="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)"
+          certificates="$("$apksigner" verify --print-certs android/app/build/outputs/apk/release/app-release.apk)"
+          echo "$certificates"
+          if ! echo "$certificates" | grep -qi "SHA-256 digest: $RELEASE_CERTIFICATE_SHA256"; then
+            echo "::error::The release APK is not signed with the expected certificate"
+            exit 1
           fi
 
       - name: Create the GitHub release

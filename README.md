@@ -107,8 +107,8 @@ do:
 
 You do not need Android Studio to get an APK: the **Android** workflow builds one on every push and
 attaches it to the run as the `al-muslim-debug-apk` artifact. Each run signs its debug APK with a
-new key, so uninstall the previous debug build before installing a newer one, or set up release
-signing as described below.
+new key, so a debug build never installs over an earlier one. With release signing set up as
+described below, every run also attaches `al-muslim-apk`, signed with your own key, which does.
 
 Prayer notifications are scheduled with exact alarms. The app declares `USE_EXACT_ALARM` so that
 this works without the user having to find a system setting; Google Play asks for a declaration of
@@ -138,6 +138,11 @@ own key, create a keystore once and add four repository secrets (Settings → Se
 Actions): `ANDROID_KEYSTORE_BASE64` (the keystore file, base64-encoded), `ANDROID_KEYSTORE_PASSWORD`,
 `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`. Without them the release contains a debug-signed APK,
 which installs but cannot be updated in place by a later release.
+
+The workflow checks every signed build against the SHA-256 of the release certificate
+(`RELEASE_CERTIFICATE_SHA256` at the top of `.github/workflows/android.yml`) and refuses to publish
+an APK signed with any other key. If you fork the project and sign with your own key, put your
+certificate's fingerprint there.
 
 ### Website
 
