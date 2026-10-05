@@ -13,6 +13,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # To see whether GitHub's own Pages build of the same commit is still running.
+  actions: read
 
 concurrency:
   group: pages
@@ -66,5 +68,23 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # With Pages set to "Deploy from a branch", GitHub also publishes the
+      # repository as it is on every push, and whichever deployment ends last
+      # is the one that stays online. Wait for that one, so that the built site
+      # is what visitors get. With the source set to "GitHub Actions" there is
+      # nothing to wait for.
+      - name: Wait for GitHub's own Pages deployment of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 40); do
+            pending="$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=${{ github.sha }}&per_page=50"               --jq '[.workflow_runs[] | select(.name == "pages build and deployment" and .status != "completed")] | length')"
+            if [ "$pending" = "0" ]; then
+              break
+            fi
+            echo "The branch deployment is still running; waiting ($attempt)."
+            sleep 15
+          done
+
       - id: deployment
         uses: actions/deploy-pages@v4
