@@ -1,46 +1,57 @@
 /**
- * The reciters offered for listening: three classic Egyptian masters and two
- * contemporary imams, all household names across the Arab world.
+ * The reciters offered for listening: three classic Egyptian masters and
+ * three contemporary imams, all household names across the Arab world.
  *
- * Audio is the per-ayah recordings published by EveryAyah.com, streamed from
- * the Islamic Network CDN. To add a reciter, add an entry here; no component
- * needs to change.
+ * Audio is each reciter's own complete murattal recording in the mp3quran.net
+ * library, one file per surah. `folder` is that recording's place on the
+ * library's CDN and `read` its number in the library's ayah timing data, which
+ * scripts/build-recitation-data.mjs turns into public/data/recitation.
+ *
+ * To add a reciter, add an entry here and run `npm run data:recitation`; no
+ * component needs to change.
  */
 export const RECITERS = [
   {
     id: 'abdulBasit',
     name: { ar: 'عبد الباسط عبد الصمد', en: 'Abdul Basit Abdus-Samad' },
     detail: { ar: 'مصر · 1927–1988', en: 'Egypt · 1927–1988' },
-    edition: 'ar.abdulbasitmurattal',
-    bitrate: 64,
+    folder: 'abdulbasit-abdulsamad/r3',
+    read: 53,
   },
   {
     id: 'husary',
     name: { ar: 'محمود خليل الحصري', en: 'Mahmoud Khalil Al-Husary' },
     detail: { ar: 'مصر · 1917–1980', en: 'Egypt · 1917–1980' },
-    edition: 'ar.husary',
-    bitrate: 64,
+    folder: 'mahmoud-husary/r1',
+    read: 118,
   },
   {
     id: 'minshawi',
     name: { ar: 'محمد صديق المنشاوي', en: 'Muhammad Siddiq Al-Minshawi' },
     detail: { ar: 'مصر · 1920–1969', en: 'Egypt · 1920–1969' },
-    edition: 'ar.minshawi',
-    bitrate: 128,
+    folder: 'muhammad-minshawi/r1',
+    read: 112,
   },
   {
     id: 'sudais',
     name: { ar: 'عبد الرحمن السديس', en: 'Abdur-Rahman As-Sudais' },
     detail: { ar: 'السعودية · إمام المسجد الحرام', en: 'Saudi Arabia · Imam of Masjid al-Haram' },
-    edition: 'ar.abdurrahmaansudais',
-    bitrate: 64,
+    folder: 'abdulrahman-sudais/r1',
+    read: 54,
+  },
+  {
+    id: 'maher',
+    name: { ar: 'ماهر المعيقلي', en: 'Maher Al-Muaiqly' },
+    detail: { ar: 'السعودية · إمام المسجد الحرام', en: 'Saudi Arabia · Imam of Masjid al-Haram' },
+    folder: 'maher-muaiqly/r3',
+    read: 133,
   },
   {
     id: 'alafasy',
     name: { ar: 'مشاري راشد العفاسي', en: 'Mishary Rashid Alafasy' },
     detail: { ar: 'الكويت', en: 'Kuwait' },
-    edition: 'ar.alafasy',
-    bitrate: 64,
+    folder: 'mishary-alafasy/r1',
+    read: 123,
   },
 ] as const;
 
@@ -55,4 +66,4 @@ export function getReciter(id: ReciterId): Reciter {
 }
 
 /** The one host recitation audio is streamed from. It must match the CSP in index.html. */
-export const RECITATION_HOST = 'https://cdn.islamic.network';
+export const RECITATION_HOST = 'https://cdn.mp3quran.net';

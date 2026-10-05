@@ -19,12 +19,12 @@ import { PageContent, Section } from '@/components/Page';
 import { AyahPreview, QuranSurahCard, surahDisplayName } from '@/components/quran';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { MIN_QUERY_LENGTH, normalizeArabic, searchAyahs, type SearchResult } from '@/domain/quran/search';
-import { ayahOrdinal, TOTAL_AYAHS, type SurahInfo } from '@/domain/quran/types';
+import { TOTAL_AYAHS, type SurahInfo } from '@/domain/quran/types';
 import { useAsync } from '@/hooks/useAsync';
 import { usePageTitle } from '@/hooks/useDeviceFeatures';
 import { useI18n } from '@/i18n';
 import { loadSearchIndex, SURAHS, getSurah } from '@/services/quranRepository';
-import { toggleBookmark, useQuranState } from '@/stores/quran';
+import { ayahsRead, toggleBookmark, totalAyahsRead, useQuranState } from '@/stores/quran';
 
 const foldLatin = (value: string) =>
   value
@@ -103,10 +103,14 @@ function AyahResults({ query }: { query: string }) {
 function ContinueReading() {
   const i18n = useI18n();
   const { t } = i18n;
-  const { lastRead } = useQuranState();
+  const quran = useQuranState();
+  const { lastRead } = quran;
   const surah = lastRead ? getSurah(lastRead.surah) : undefined;
   if (!lastRead || !surah) return null;
-  const percent = Math.max(1, Math.round((ayahOrdinal(lastRead, SURAHS) / TOTAL_AYAHS) * 100));
+  // Progress is what has been read, not where the reader happens to be.
+  const read = ayahsRead(quran, surah.id);
+  const total = totalAyahsRead(quran);
+  const percent = Math.floor((total / TOTAL_AYAHS) * 100);
 
   return (
     <ButtonBase
@@ -129,10 +133,15 @@ function ContinueReading() {
       <Typography variant="subtitle1" component="span" sx={{ display: 'block' }}>
         {t('quran.ayahRef', { surah: surahDisplayName(i18n, surah), ayah: lastRead.ayah })}
       </Typography>
-      <LinearProgress variant="determinate" value={percent} aria-hidden sx={{ my: 1.25 }} />
+      <LinearProgress variant="determinate" value={(read / surah.ayahs) * 100} aria-hidden sx={{ my: 1.25 }} />
       <Typography variant="body2" color="textSecondary" component="span" sx={{ display: 'block' }}>
-        {t('quran.progress', { percent })}
+        {t('quran.readInSurah', { read, total: surah.ayahs })}
       </Typography>
+      {total > 0 && (
+        <Typography variant="body2" color="textSecondary" component="span" sx={{ display: 'block' }}>
+          {percent < 1 ? t('quran.readOverallLow') : t('quran.readOverall', { percent })}
+        </Typography>
+      )}
     </ButtonBase>
   );
 }
@@ -185,6 +194,7 @@ function Bookmarks() {
 
 export default function QuranPage() {
   const { t } = useI18n();
+  const quran = useQuranState();
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<'surahs' | 'bookmarks'>('surahs');
   const deferredQuery = useDeferredValue(query);
@@ -249,7 +259,7 @@ export default function QuranPage() {
               ) : (
                 <Box>
                   {surahs.map((surah) => (
-                    <QuranSurahCard key={surah.id} surah={surah} />
+                    <QuranSurahCard key={surah.id} surah={surah} read={ayahsRead(quran, surah.id)} />
                   ))}
                 </Box>
               )}
@@ -269,7 +279,7 @@ export default function QuranPage() {
             <ContinueReading />
             <Box>
               {surahs.map((surah) => (
-                <QuranSurahCard key={surah.id} surah={surah} />
+                <QuranSurahCard key={surah.id} surah={surah} read={ayahsRead(quran, surah.id)} />
               ))}
             </Box>
           </>

@@ -2,7 +2,7 @@
   "brand": "Al-Muslim",
   "meta": {
     "title": "Al-Muslim — prayer times, Quran and adhkar, private and offline",
-    "description": "A free, open-source Islamic companion: accurate prayer times with the adhan, the full Quran with five reciters, adhkar, qiblah, Hijri calendar and Android widgets. No accounts, no ads, no tracking."
+    "description": "A free, open-source Islamic companion: accurate prayer times with the adhan, the full Quran with six reciters, adhkar, qiblah, Hijri calendar and Android widgets. No accounts, no ads, no tracking."
   },
   "nav": {
     "skip": "Skip to content",
@@ -15,7 +15,7 @@
   "hero": {
     "eyebrow": "Free and open source",
     "title": "Your daily worship, in one calm app",
-    "body": "Accurate prayer times with the adhan, the full Quran with five reciters, daily adhkar, the qiblah and the Hijri calendar. It works without the internet and keeps everything on your device.",
+    "body": "Accurate prayer times with the adhan, the full Quran with six reciters, daily adhkar, the qiblah and the Hijri calendar. It works without the internet and keeps everything on your device.",
     "note": "No account. No ads. No tracking."
   },
   "cta": {
@@ -60,8 +60,8 @@
       "body": "All 114 surahs in Uthmani script, with search in everyday Arabic, bookmarks, your reading position and adjustable text size."
     },
     "audio": {
-      "title": "Five reciters",
-      "body": "Listen ayah by ayah to Abdul Basit, Al-Husary, Al-Minshawi, As-Sudais or Alafasy, with the text following along."
+      "title": "Six reciters",
+      "body": "Listen to Abdul Basit, Al-Husary, Al-Minshawi, As-Sudais, Al-Muaiqly or Alafasy, with the text following along ayah by ayah."
     },
     "adhkar": {
       "title": "Adhkar",

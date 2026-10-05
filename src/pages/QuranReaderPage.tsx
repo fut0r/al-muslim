@@ -34,12 +34,13 @@ import { RECITATION_BAR_SPACE, RecitationBar } from '@/components/RecitationBar'
 import { ChoiceDialog } from '@/components/settings';
 import { ErrorState, LoadingState } from '@/components/states';
 import { getReciter, RECITERS } from '@/data/reciters';
+import { minimumReadingTime } from '@/domain/quran/progress';
 import { showsBasmalah } from '@/domain/quran/types';
 import { useKeepAwake, usePageTitle } from '@/hooks/useDeviceFeatures';
 import { useRecitation } from '@/hooks/useRecitation';
 import { useI18n } from '@/i18n';
 import { getSurah } from '@/services/quranRepository';
-import { isBookmarked, setLastRead, toggleBookmark, useQuranState } from '@/stores/quran';
+import { isBookmarked, markRead, setLastRead, toggleBookmark, useQuranState } from '@/stores/quran';
 import { QURAN_FONT_SCALE, updateSettings, useSettings } from '@/stores/settings';
 import { LAYOUT, SAFE_AREA } from '@/theme/tokens';
 import NotFoundPage from './NotFoundPage';
@@ -165,7 +166,7 @@ function Reader({ surahId }: { surahId: number }) {
   const { t } = i18n;
   const surah = getSurah(surahId)!;
   const { quranFontScale, reciter: reciterId } = useSettings();
-  const recitation = useRecitation(surah, reciterId);
+  const recitation = useRecitation(surahId, reciterId);
   const reciter = getReciter(reciterId);
   const reciterName = i18n.language === 'ar' ? reciter.name.ar : reciter.name.en;
   const quran = useQuranState();
@@ -180,6 +181,8 @@ function Reader({ surahId }: { surahId: number }) {
   const targetAyah = Number.isInteger(requested) && requested >= 1 && requested <= surah.ayahs ? requested : null;
 
   const [currentAyah, setCurrentAyah] = useState(targetAyah ?? 1);
+  // True once the end of the surah is on screen, so its last ayahs can be read without scrolling further.
+  const [endVisible, setEndVisible] = useState(false);
   const [menu, setMenu] = useState<{ ayah: number; anchor: HTMLElement } | null>(null);
   const [goToOpen, setGoToOpen] = useState(false);
   const [sizeAnchor, setSizeAnchor] = useState<HTMLElement | null>(null);
@@ -204,6 +207,7 @@ function Reader({ surahId }: { surahId: number }) {
   }, [ready, targetAyah]);
 
   // Track the ayah at the top of the screen as the reading position.
+  const lastOnScreen = useRef(targetAyah ?? 1);
   useEffect(() => {
     if (!ready) return;
     let frame = 0;
@@ -211,24 +215,34 @@ function Reader({ surahId }: { surahId: number }) {
       frame = 0;
       const nodes = container.current?.querySelectorAll<HTMLElement>('[data-ayah]');
       if (!nodes || nodes.length === 0) return;
-      // The reading position is the last ayah that begins at or above this line,
-      // just under the header. Ayahs are in document order, so a binary search works.
-      const line = LAYOUT.headerHeight + 64;
-      let low = 0;
-      let high = nodes.length - 1;
-      while (low < high) {
-        const middle = (low + high + 1) >> 1;
-        if (nodes[middle]!.getBoundingClientRect().top <= line) low = middle;
-        else high = middle - 1;
-      }
-      setCurrentAyah(Number(nodes[low]!.dataset.ayah));
+      // The last ayah that begins at or above a line. Ayahs are in document
+      // order, so a binary search works.
+      const lastAbove = (line: number) => {
+        let low = 0;
+        let high = nodes.length - 1;
+        while (low < high) {
+          const middle = (low + high + 1) >> 1;
+          if (nodes[middle]!.getBoundingClientRect().top <= line) low = middle;
+          else high = middle - 1;
+        }
+        return Number(nodes[low]!.dataset.ayah);
+      };
+      // The reading position is the ayah at the line just under the header.
+      setCurrentAyah(lastAbove(LAYOUT.headerHeight + 64));
+      const bottom = window.innerHeight - LAYOUT.bottomNavHeight;
+      lastOnScreen.current = lastAbove(bottom);
+      setEndVisible(nodes[nodes.length - 1]!.getBoundingClientRect().bottom <= bottom);
     };
     const onScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(measure);
     };
+    // Measure once without waiting for a scroll: a short surah may never need one.
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, [ready]);
@@ -239,6 +253,42 @@ function Reader({ surahId }: { surahId: number }) {
     const timer = window.setTimeout(() => setLastRead({ surah: surahId, ayah: currentAyah }), 700);
     return () => window.clearTimeout(timer);
   }, [ready, surahId, currentAyah]);
+
+  // Reading progress counts the ayahs that were actually read, never the
+  // position alone. Each time the reader comes to rest, the ayahs that have
+  // gone above the reading line are counted if they were on screen at the
+  // previous rest and there was time to read them. Jumping or flinging ahead
+  // therefore counts nothing for the ayahs that were skipped.
+  const ayahs = text.status === 'ready' ? text.ayahs : null;
+  const rest = useRef({ ayah: targetAyah ?? 1, at: 0, lastOnScreen: targetAyah ?? 1 });
+  useEffect(() => {
+    if (!ayahs) return;
+    const timer = window.setTimeout(() => {
+      const previous = rest.current;
+      const now = performance.now();
+      const until = Math.min(currentAyah - 1, previous.lastOnScreen);
+      if (previous.at > 0 && until >= previous.ayah) {
+        let characters = 0;
+        for (let ayah = previous.ayah; ayah <= until; ayah += 1) characters += ayahs[ayah - 1]!.length;
+        if (now - previous.at >= minimumReadingTime(characters)) markRead(surahId, previous.ayah, until);
+      }
+      rest.current = { ayah: currentAyah, at: now, lastOnScreen: lastOnScreen.current };
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [ayahs, currentAyah, surahId]);
+
+  // The last ayahs of a surah never rise to the reading line. Once the end is
+  // on screen they are counted after the time it takes to read them.
+  useEffect(() => {
+    if (!ayahs || !endVisible) return;
+    let characters = 0;
+    for (let ayah = currentAyah; ayah <= ayahs.length; ayah += 1) characters += ayahs[ayah - 1]!.length;
+    const timer = window.setTimeout(
+      () => markRead(surahId, currentAyah, ayahs.length),
+      Math.max(1500, minimumReadingTime(characters)),
+    );
+    return () => window.clearTimeout(timer);
+  }, [ayahs, endVisible, currentAyah, surahId]);
 
   // Keep the ayah being recited in view.
   const playingAyah = recitation.ayah;
@@ -396,7 +446,12 @@ function Reader({ surahId }: { surahId: number }) {
         )}
       </PageContent>
 
-      <RecitationBar recitation={recitation} reciterName={reciterName} onChooseReciter={() => setReciterOpen(true)} />
+      <RecitationBar
+        recitation={recitation}
+        reciterName={reciterName}
+        basmalah={showsBasmalah(surahId)}
+        onChooseReciter={() => setReciterOpen(true)}
+      />
 
       <Menu open={menu !== null} anchorEl={menu?.anchor} onClose={() => setMenu(null)}>
         <Typography variant="caption" color="textSecondary" component="p" sx={{ px: 2, pb: 0.5 }}>

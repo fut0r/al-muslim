@@ -32,7 +32,14 @@ export interface NotificationBackend {
   requestPermission(): Promise<NotificationPermissionState>;
   /** Replaces everything previously scheduled with `items` (empty clears all). */
   replaceSchedule(items: ScheduledNotification[], options: NotificationOptions): Promise<void>;
+  /** Delivers one notification in a few seconds, with the chosen sound, to confirm that delivery works. */
+  sendTest(item: Pick<ScheduledNotification, 'title' | 'body' | 'label'>, options: NotificationOptions): Promise<void>;
   /** Android 12+: whether notifications may fire at the exact minute. */
   exactAlarmsAllowed?(): Promise<boolean>;
   openExactAlarmSettings?(): Promise<boolean>;
+  /**
+   * Opens the system screen where notifications for this app are allowed.
+   * Resolves to false when there is no such screen to open (the browser).
+   */
+  openSettings?(): Promise<boolean>;
 }

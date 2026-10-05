@@ -1,7 +1,7 @@
 {
   "name": "al-muslim",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Al-Muslim — a free, open-source, privacy-first Islamic companion: prayer times, Quran, adhkar, qiblah and Hijri calendar. Works offline.",
   "license": "GPL-3.0-only",
   "author": "Zyad Mohamed",
@@ -29,6 +29,7 @@
     "site": "node scripts/build-site.mjs",
     "site:preview": "vite preview --outDir dist-site --port 4174 --strictPort",
     "data:quran": "node scripts/build-quran-data.mjs",
+    "data:recitation": "node scripts/build-recitation-data.mjs",
     "data:cities": "node scripts/build-cities-data.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "android:sync": "npm run build && node scripts/sync-android-assets.mjs && cap sync android",

@@ -17,7 +17,7 @@ import { EmptyState, ErrorState } from '@/components/states';
 import { toHijri } from '@/domain/hijri';
 import { addDays, deviceTimeZone } from '@/domain/time';
 import { usePageTitle } from '@/hooks/useDeviceFeatures';
-import { useDayTimes, useLivePrayerState, useToday } from '@/hooks/usePrayerTimes';
+import { useCalculation, useDayTimes, useLivePrayerState, useToday } from '@/hooks/usePrayerTimes';
 import { useI18n } from '@/i18n';
 import { formatGregorian, formatHijri } from '@/i18n/format';
 import { useSavedLocation } from '@/stores/location';
@@ -26,7 +26,8 @@ import { useSettings } from '@/stores/settings';
 export default function PrayerTimesPage() {
   const i18n = useI18n();
   const { t } = i18n;
-  const { method, madhab, hijriAdjustment } = useSettings();
+  const { hijriAdjustment } = useSettings();
+  const { method, madhab, automatic } = useCalculation();
   const location = useSavedLocation();
   const { now, state } = useLivePrayerState();
   const today = useToday(now);
@@ -115,17 +116,21 @@ export default function PrayerTimesPage() {
               </Button>
             }
           >
-            <SettingItem label={t('prayerTimes.method')} description={t(`methods.${method}`)} />
-              <SettingItem label={t('prayerTimes.madhab')} description={t(`madhab.${madhab}`)} />
-              <SettingItem
-                label={t('prayerTimes.location')}
-                description={locationLabel(i18n, location)}
-                onClick={() => setLocationOpen(true)}
-              />
-              <SettingItem
-                label={t('prayerTimes.timeZone')}
-                description={location.timeZone ?? deviceTimeZone() ?? t('prayerTimes.deviceTimeZone')}
-              />
+            <SettingItem
+              label={t('prayerTimes.method')}
+              description={t(`methods.${method}`)}
+              value={automatic ? t('prayerTimes.automatic') : undefined}
+            />
+            <SettingItem label={t('prayerTimes.madhab')} description={t(`madhab.${madhab}`)} />
+            <SettingItem
+              label={t('prayerTimes.location')}
+              description={locationLabel(i18n, location)}
+              onClick={() => setLocationOpen(true)}
+            />
+            <SettingItem
+              label={t('prayerTimes.timeZone')}
+              description={location.timeZone ?? deviceTimeZone() ?? t('prayerTimes.deviceTimeZone')}
+            />
           </SettingsSection>
         )}
       </PageContent>

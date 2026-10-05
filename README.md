@@ -20,16 +20,21 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
 ## Features
 
 - **Prayer times** calculated on the device with the [adhan](https://github.com/batoulapps/adhan-js)
-  library: 12 calculation methods (Muslim World League, Egyptian, Umm al-Qura, Karachi, ISNA and
-  more), Shafi'i/Hanafi Asr, high-latitude rules, correct time zones and daylight saving time.
+  library. By default the app follows the convention of the country you are in: its method (17 are
+  included, among them Egypt, Umm al-Qura, the Gulf, Kuwait, Qatar, Jordan, Morocco, Algeria,
+  Tunisia, Turkey and Karachi), its Asr calculation (Shafi'i or Hanafi) and its adjustments, such
+  as the later Isha of the Umm al-Qura calendar in Ramadan. You can choose your own instead.
+  High-latitude rules, time zones and daylight saving time are handled as well.
 - **Adhan notifications** at the five prayers, scheduled locally and per prayer, with the adhan by
-  Mishary Rashid Alafasy or the device's ordinary notification sound.
+  Mishary Rashid Alafasy or the device's ordinary notification sound, and a test notification to
+  confirm that they arrive.
 - **Home** with the next prayer, a live countdown, today's times and both dates.
 - **Quran**: all 114 surahs in Uthmani script, full-text search that understands everyday Arabic
-  spelling, bookmarks, reading position, progress, go-to-ayah and adjustable text size.
-- **Recitations**: listen ayah by ayah, with the text following along, to Abdul Basit Abdus-Samad,
-  Mahmoud Khalil Al-Husary, Muhammad Siddiq Al-Minshawi, Abdur-Rahman As-Sudais or Mishary Rashid
-  Alafasy.
+  spelling, bookmarks, reading position, go-to-ayah and adjustable text size. Reading progress
+  counts the ayahs you have actually read, surah by surah, not how far into the Quran you are.
+- **Recitations**: listen with the text following along ayah by ayah, and start from any ayah, with
+  Abdul Basit Abdus-Samad, Mahmoud Khalil Al-Husary, Muhammad Siddiq Al-Minshawi, Abdur-Rahman
+  As-Sudais, Maher Al-Muaiqly or Mishary Rashid Alafasy.
 - **Adhkar** for the morning, evening, sleep, after prayer and general remembrance, each with its
   source, a counter, progress that is saved for the day, and optional haptic feedback.
 - **Qiblah** compass using the device sensors, a great-circle bearing and magnetic declination. If
@@ -45,7 +50,7 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
 
 - No analytics, trackers, ads, accounts or third-party SDKs. No server.
 - **One network use, and only when you ask for it:** listening to a recitation streams audio from
-  `cdn.islamic.network` when you press play. Everything else works offline, and a content security
+  `cdn.mp3quran.net` when you press play. Everything else works offline, and a content security
   policy in `index.html` allows nothing but the app's own origin and that audio host.
 - Location is requested only when you ask for it, used on the device and stored only on the device.
   A GPS position is labelled with the nearest city from a bundled list, never by a geocoding service.
@@ -70,19 +75,20 @@ npm install
 npm run dev
 ```
 
-| Command                | What it does                                              |
-| ---------------------- | --------------------------------------------------------- |
-| `npm run dev`          | Start the development server                              |
-| `npm run build`        | Type-check and build the web app into `dist/`             |
-| `npm run preview`      | Serve the production build locally                        |
-| `npm run check`        | Type-check, lint and run the unit tests                   |
-| `npm test`             | Run the unit tests                                        |
-| `npm run site`         | Build the landing page (with the app under `/app/`)       |
-| `npm run site:preview` | Serve the built landing page locally                      |
-| `npm run android:sync` | Build the web app and copy it into the Android project    |
-| `npm run icons`        | Regenerate the PNG icons from the SVG logo                |
-| `npm run data:quran`   | Regenerate the Quran data files (see the script)          |
-| `npm run data:cities`  | Regenerate the city list (see the script)                 |
+| Command                   | What it does                                           |
+| ------------------------- | ------------------------------------------------------ |
+| `npm run dev`             | Start the development server                           |
+| `npm run build`           | Type-check and build the web app into `dist/`          |
+| `npm run preview`         | Serve the production build locally                     |
+| `npm run check`           | Type-check, lint and run the unit tests                |
+| `npm test`                | Run the unit tests                                     |
+| `npm run site`            | Build the landing page (with the app under `/app/`)    |
+| `npm run site:preview`    | Serve the built landing page locally                   |
+| `npm run android:sync`    | Build the web app and copy it into the Android project |
+| `npm run icons`           | Regenerate the PNG icons from the SVG logo             |
+| `npm run data:quran`      | Regenerate the Quran data files (see the script)       |
+| `npm run data:recitation` | Regenerate the ayah timings for the recitations        |
+| `npm run data:cities`     | Regenerate the city list (see the script)              |
 
 ### Android
 
@@ -91,7 +97,13 @@ adds what the web cannot do: notifications and the adhan with the app closed, an
 widgets (`android/app/src/main/java/.../widgets`).
 
 You do not need Android Studio to get an APK: the **Android** workflow builds one on every push and
-attaches it to the run as the `al-muslim-debug-apk` artifact.
+attaches it to the run as the `al-muslim-debug-apk` artifact. Each run signs its debug APK with a
+new key, so uninstall the previous debug build before installing a newer one, or set up release
+signing as described below.
+
+Prayer notifications are scheduled with exact alarms. The app declares `USE_EXACT_ALARM` so that
+this works without the user having to find a system setting; Google Play asks for a declaration of
+that permission if you publish the app there.
 
 To build locally you need JDK 21 and the Android SDK:
 
@@ -107,8 +119,8 @@ or `cd android && ./gradlew assembleDebug` after the sync.
 Pushing a version tag publishes a GitHub release with the APK:
 
 ```bash
-git tag v2.0.0
-git push origin v2.0.0
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
 Android only installs an update over an app signed with the same key. To sign releases with your
@@ -171,8 +183,14 @@ colours.
 - **Quran text**: Uthmani script as published by [Quran.com](https://quran.com), obtained through
   the `quran-validator` package. The build script verifies the surah and ayah counts and a checksum
   of the whole text. The text is never edited by hand.
-- **Recitations**: per-ayah recordings published by [EveryAyah.com](https://everyayah.com), streamed
-  from the [Islamic Network](https://islamic.network) CDN.
+- **Recitations**: each reciter's complete murattal recording in the
+  [mp3quran.net](https://www.mp3quran.net) library, streamed one surah at a time, so a surah is
+  always in a single voice. The ayah timings that let the text follow the audio come from the same
+  library (`npm run data:recitation`) and are bundled in `public/data/recitation`. Every surah was
+  checked against its audio, and the few whose published timings did not fit were corrected
+  (`scripts/recitation-corrections.json`).
+- **Calculation methods**: the parameters of the methods that adhan-js does not include (Gulf,
+  Jordan, Morocco, Algeria, Tunisia) are those listed by [AlAdhan](https://aladhan.com/calculation-methods).
 - **Adhan**: recorded by Mishary Rashid Alafasy, obtained from the
   [AlAdhan](https://aladhan.com) audio collection (`public/audio/adhan.mp3`). The source does not
   state a licence for the recording; replace the file if you redistribute the app under terms that

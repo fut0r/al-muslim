@@ -25,12 +25,13 @@ a report:
   storage on the device and is validated every time it is read.
 - The app loads only its own bundled files. `index.html` sets a content security policy that limits
   scripts, styles, fonts, images and connections to the app's own origin. The single other host it
-  allows is `cdn.islamic.network`, for recitation audio that plays only when the user presses play.
+  allows is `cdn.mp3quran.net`, for recitation audio that plays only when the user presses play.
 - The landing page in `site/` is static HTML and CSS with no scripts at all.
 - The Quran text is verified against a checksum when the data files are generated and checked for
   completeness when loaded.
 - The Android app requests location and notification permissions only when the user enables the
-  corresponding feature, and disables cloud backup of app data.
+  corresponding feature, and disables cloud backup of app data. It declares `USE_EXACT_ALARM` so
+  that prayer notifications fire at their minute; nothing else is scheduled with it.
 
 If a backend or sync feature is ever added it must be strictly optional, use HTTPS, validate all
 input on the server, keep secrets out of the client and store tokens securely.

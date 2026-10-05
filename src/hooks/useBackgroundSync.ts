@@ -6,11 +6,12 @@ import { addDays, civilDateInZone, type CivilDate } from '@/domain/time';
 import { useI18n } from '@/i18n';
 import { formatLocation, formatTime } from '@/i18n/format';
 import { locationPermission } from '@/services/geolocation';
-import { notifications } from '@/services/notifications';
+import { notificationOptions, notifications } from '@/services/notifications';
 import { buildWidgetPayload, updateWidgets, widgetsSupported } from '@/services/widgets';
 import { locationStore, useSavedLocation } from '@/stores/location';
 import { useSettings } from '@/stores/settings';
 import { saveDeviceLocation } from './useLocationActions';
+import { useCalculation } from './usePrayerTimes';
 
 /** Counts how often the app returns to the foreground. */
 function useResumeCount(): number {
@@ -29,26 +30,18 @@ function useResumeCount(): number {
  * Keeps the scheduled prayer notifications in line with the current settings,
  * location and language. Runs on launch, on every return to the app and
  * whenever a relevant setting changes; times are calculated on the device.
+ * The backend leaves the system's alarms alone when nothing has changed.
  */
 export function usePrayerNotificationSync(): void {
   const i18n = useI18n();
   const location = useSavedLocation();
-  const { method, madhab, hour12, notifications: preferences } = useSettings();
+  const { hour12, notifications: preferences } = useSettings();
+  const { method, madhab } = useCalculation();
   const resumes = useResumeCount();
 
   useEffect(() => {
     let cancelled = false;
-    const options = {
-      sound: preferences.sound,
-      channel: {
-        name: i18n.t('notification.channelName'),
-        description: i18n.t('notification.channelDescription'),
-      },
-      adhanChannel: {
-        name: i18n.t('notification.adhanChannelName'),
-        description: i18n.t('notification.adhanChannelDescription'),
-      },
-    };
+    const options = notificationOptions(i18n, preferences.sound);
 
     const sync = async () => {
       if (!preferences.enabled || !location) {
@@ -98,7 +91,8 @@ export function usePrayerNotificationSync(): void {
 export function useWidgetSync(): void {
   const i18n = useI18n();
   const location = useSavedLocation();
-  const { method, madhab, hour12, hijriAdjustment } = useSettings();
+  const { hour12, hijriAdjustment } = useSettings();
+  const { method, madhab } = useCalculation();
   const resumes = useResumeCount();
 
   useEffect(() => {

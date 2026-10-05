@@ -1,18 +1,21 @@
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import RemoveOutlined from '@mui/icons-material/RemoveOutlined';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useAdhanState } from '@/components/AdhanBanner';
 import { AppHeader } from '@/components/AppHeader';
+import { useCalculationSettings } from '@/components/CalculationSettings';
 import { LocationDialog, locationLabel } from '@/components/LocationDialog';
 import { PageContent } from '@/components/Page';
 import { ChoiceDialog, SegmentedControl, SettingItem, SettingsSection, SwitchItem } from '@/components/settings';
 import { getReciter, RECITERS } from '@/data/reciters';
-import { CALCULATION_METHOD_IDS } from '@/domain/prayer/methods';
-import { MADHABS, OBLIGATORY_PRAYER_IDS } from '@/domain/prayer/types';
+import { OBLIGATORY_PRAYER_IDS } from '@/domain/prayer/types';
+import { TOTAL_AYAHS } from '@/domain/quran/types';
 import { usePageTitle } from '@/hooks/useDeviceFeatures';
 import { saveDeviceLocation } from '@/hooks/useLocationActions';
 import { useNotificationControls } from '@/hooks/useNotificationControls';
@@ -21,10 +24,11 @@ import { adhanPlayer } from '@/services/adhanPlayer';
 import { countryName } from '@/services/cities';
 import { locationPermission, type LocationPermission } from '@/services/geolocation';
 import { hapticsSupported } from '@/services/haptics';
-import { notifications } from '@/services/notifications';
+import { notificationOptions, notifications } from '@/services/notifications';
 import { wakeLockSupported } from '@/services/wakeLock';
 import { pinWidget, widgetsSupported, type WidgetKind } from '@/services/widgets';
 import { useSavedLocation } from '@/stores/location';
+import { resetReadingProgress, totalAyahsRead, useQuranState } from '@/stores/quran';
 import {
   HIJRI_ADJUSTMENT_RANGE,
   LANGUAGES,
@@ -51,8 +55,11 @@ export default function SettingsPage() {
   const settings = useSettings();
   const location = useSavedLocation();
   const notification = useNotificationControls();
+  const calculation = useCalculationSettings();
   const adhan = useAdhanState();
-  const [dialog, setDialog] = useState<'method' | 'madhab' | 'location' | 'reciter' | null>(null);
+  const ayahsRead = totalAyahsRead(useQuranState());
+  const resetTitleId = useId();
+  const [dialog, setDialog] = useState<'location' | 'reciter' | 'resetReading' | null>(null);
   const [permission, setPermission] = useState<LocationPermission>('unknown');
   const [exactAlarms, setExactAlarms] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -85,7 +92,7 @@ export default function SettingsPage() {
     notification.permission === 'unsupported'
       ? t('settings.notificationsUnsupported')
       : notification.permission === 'denied'
-        ? t('settings.notificationsDenied')
+        ? t(notifications.openSettings ? 'settings.notificationsDeniedNative' : 'settings.notificationsDenied')
         : !location
           ? t('settings.notificationsNeedLocation')
           : notifications.deliversWhenClosed
@@ -104,6 +111,18 @@ export default function SettingsPage() {
       adhanPlayer.stop();
     } else if (!(await adhanPlayer.play())) {
       setMessage(t('adhan.failed'));
+    }
+  };
+
+  const sendTestNotification = async () => {
+    try {
+      await notifications.sendTest(
+        { title: t('notification.testTitle'), body: t('notification.testBody'), label: t('app.name') },
+        notificationOptions(i18n, settings.notifications.sound),
+      );
+      setMessage(t('settings.testNotificationSent'));
+    } catch {
+      setMessage(t('settings.testNotificationFailed'));
     }
   };
 
@@ -146,16 +165,7 @@ export default function SettingsPage() {
         </SettingsSection>
 
         <SettingsSection title={t('settings.prayer')}>
-          <SettingItem
-            label={t('settings.method')}
-            description={t(`methods.${settings.method}`)}
-            onClick={() => setDialog('method')}
-          />
-          <SettingItem
-            label={t('settings.madhab')}
-            description={t(`madhab.${settings.madhab}`)}
-            onClick={() => setDialog('madhab')}
-          />
+          {calculation.rows}
           <SettingItem label={t('settings.timeFormat')}>
             <SegmentedControl
               label={t('settings.timeFormat')}
@@ -254,6 +264,13 @@ export default function SettingsPage() {
               onClick={() => void toggleAdhanPreview()}
             />
           )}
+          {notificationsOn && (
+            <SettingItem
+              label={t('settings.testNotification')}
+              description={t('settings.testNotificationHint')}
+              onClick={() => void sendTestNotification()}
+            />
+          )}
           {notificationsOn && !exactAlarms && notifications.openExactAlarmSettings && (
             <SettingItem
               label={t('settings.exactAlarms')}
@@ -269,6 +286,11 @@ export default function SettingsPage() {
             description={i18n.language === 'ar' ? reciter.name.ar : reciter.name.en}
             onClick={() => setDialog('reciter')}
           />
+          <SettingItem
+            label={t('settings.readingProgress')}
+            description={`${t('settings.readingProgressValue', { read: ayahsRead, total: TOTAL_AYAHS })} ${t('settings.readingProgressHint')}`}
+          />
+          {ayahsRead > 0 && <SettingItem label={t('settings.resetReading')} onClick={() => setDialog('resetReading')} />}
         </SettingsSection>
 
         {widgetsSupported && (
@@ -330,26 +352,7 @@ export default function SettingsPage() {
         </SettingsSection>
       </PageContent>
 
-      <ChoiceDialog
-        open={dialog === 'method'}
-        title={t('settings.method')}
-        value={settings.method}
-        onChange={(method) => updateSettings({ method })}
-        onClose={() => setDialog(null)}
-        options={CALCULATION_METHOD_IDS.map((value) => ({ value, label: t(`methods.${value}`) }))}
-      />
-      <ChoiceDialog
-        open={dialog === 'madhab'}
-        title={t('settings.madhab')}
-        value={settings.madhab}
-        onChange={(madhab) => updateSettings({ madhab })}
-        onClose={() => setDialog(null)}
-        options={MADHABS.map((value) => ({
-          value,
-          label: t(`madhab.${value}`),
-          description: t(`madhab.${value}Hint`),
-        }))}
-      />
+      {calculation.dialogs}
       <ChoiceDialog
         open={dialog === 'reciter'}
         title={t('quran.reciter')}
@@ -364,6 +367,31 @@ export default function SettingsPage() {
         }))}
       />
       <LocationDialog open={dialog === 'location'} onClose={() => setDialog(null)} />
+      <Dialog open={dialog === 'resetReading'} onClose={() => setDialog(null)} fullWidth maxWidth="xs" aria-labelledby={resetTitleId}>
+        <Box sx={{ p: 3 }}>
+          <Typography id={resetTitleId} variant="h2" component="h2">
+            {t('settings.resetReadingConfirm')}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            {t('settings.resetReadingBody')}
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
+            <Button color="inherit" onClick={() => setDialog(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                resetReadingProgress();
+                setDialog(null);
+                setMessage(t('settings.resetReadingDone'));
+              }}
+            >
+              {t('common.reset')}
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
       <Snackbar
         open={message !== null}
         autoHideDuration={4000}

@@ -22,6 +22,11 @@ export const QURAN_FONT_SCALE = { min: 0.8, max: 1.8, step: 0.1, default: 1 } as
 export interface Settings {
   theme: ThemePreference;
   language: Language;
+  /**
+   * Calculate prayer times the way the country of the saved location does.
+   * When off, `method` and `madhab` below are used instead.
+   */
+  autoCalculation: boolean;
   method: CalculationMethodId;
   madhab: Madhab;
   hour12: boolean;
@@ -66,6 +71,7 @@ export function sanitizeSettings(raw: unknown): Settings {
   return {
     theme: oneOf(data.theme, THEME_PREFERENCES, 'system'),
     language: oneOf(data.language, LANGUAGES, detectLanguage()),
+    autoCalculation: asBoolean(data.autoCalculation, true),
     method: isCalculationMethodId(data.method) ? data.method : DEFAULT_CALCULATION_METHOD,
     madhab: oneOf(data.madhab, MADHABS, 'shafi'),
     hour12: asBoolean(data.hour12, detectHour12()),

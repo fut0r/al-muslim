@@ -3,10 +3,18 @@ import { describe, expect, it } from 'vitest';
 import surahsJson from '../data/quran/surahs.json';
 import { hijriMonthView, hijriToCivil, shiftHijriMonth, toHijri, usesUmmAlQura } from './hijri';
 import { calculateDayTimes } from './prayer/calculate';
-import { CALCULATION_METHOD_IDS, suggestMethodForCountry } from './prayer/methods';
+import {
+  CALCULATION_METHOD_IDS,
+  conventionForCountry,
+  hasCountryConvention,
+  methodParameters,
+  resolveCalculation,
+} from './prayer/methods';
 import { computePrayerStatus, toCountdown, upcomingPrayers } from './prayer/schedule';
 import { PRAYER_IDS, type DayTimes } from './prayer/types';
 import { angleDelta, compassPoint, distanceToKaabaKm, qiblaBearing } from './qibla';
+import { addRange, countAyahs, minimumReadingTime, sanitizeRanges } from './quran/progress';
+import { ayahStartSeconds, isValidTimings, positionAt, recitationUrl } from './quran/recitation';
 import { buildSearchIndex, normalizeArabic, searchAyahs } from './quran/search';
 import { ayahOrdinal, TOTAL_AYAHS, type SurahInfo } from './quran/types';
 import { addDays, civilDateInZone, civilToJdn, jdnToCivil, weekdayOf } from './time';
@@ -113,11 +121,56 @@ describe('prayer times', () => {
     ).toBeNull();
   });
 
-  it('suggests a method by country', () => {
-    expect(suggestMethodForCountry('EG')).toBe('Egyptian');
-    expect(suggestMethodForCountry('sa')).toBe('UmmAlQura');
-    expect(suggestMethodForCountry('FR')).toBe('MuslimWorldLeague');
-    expect(suggestMethodForCountry(undefined)).toBe('MuslimWorldLeague');
+  it('follows the convention of each country', () => {
+    expect(conventionForCountry('EG')).toEqual({ method: 'Egyptian', madhab: 'shafi' });
+    expect(conventionForCountry('sa')).toEqual({ method: 'UmmAlQura', madhab: 'shafi' });
+    expect(conventionForCountry('PK')).toEqual({ method: 'Karachi', madhab: 'hanafi' });
+    expect(conventionForCountry('MA').method).toBe('Morocco');
+    expect(conventionForCountry('JO').method).toBe('Jordan');
+    expect(conventionForCountry('BH').method).toBe('Gulf');
+    // Turkey is Hanafi, yet its official timetable gives the earlier Asr.
+    expect(conventionForCountry('TR')).toEqual({ method: 'Turkey', madhab: 'shafi' });
+    expect(conventionForCountry('FR')).toEqual({ method: 'MuslimWorldLeague', madhab: 'shafi' });
+    expect(conventionForCountry(undefined).method).toBe('MuslimWorldLeague');
+    expect(hasCountryConvention('eg')).toBe(true);
+    expect(hasCountryConvention('FR')).toBe(false);
+    expect(hasCountryConvention(undefined)).toBe(false);
+  });
+
+  it('uses the country convention unless the user chose their own', () => {
+    const own = { method: 'Kuwait', madhab: 'hanafi' } as const;
+    expect(resolveCalculation({ autoCalculation: true, ...own }, 'EG')).toEqual({ method: 'Egyptian', madhab: 'shafi' });
+    expect(resolveCalculation({ autoCalculation: false, ...own }, 'EG')).toEqual(own);
+  });
+
+  it("applies each authority's own angles and adjustments", () => {
+    const date = { year: 2026, month: 10, day: 5 };
+    expect(methodParameters('Morocco', date)).toMatchObject({ fajrAngle: 19, ishaAngle: 17 });
+    expect(methodParameters('Algeria', date)).toMatchObject({ fajrAngle: 18, ishaAngle: 17 });
+    expect(methodParameters('Tunisia', date)).toMatchObject({ fajrAngle: 18, ishaAngle: 18 });
+    expect(methodParameters('Gulf', date)).toMatchObject({ fajrAngle: 19.5, ishaInterval: 90 });
+    expect(methodParameters('Jordan', date)).toMatchObject({ fajrAngle: 18, ishaAngle: 18 });
+    expect(methodParameters('Jordan', date).methodAdjustments.maghrib).toBe(5);
+
+    const amman = { latitude: 31.95, longitude: 35.93 };
+    const jordan = calculateDayTimes({ date, coordinates: amman, method: 'Jordan', madhab: 'shafi' })!;
+    const karachi = calculateDayTimes({ date, coordinates: amman, method: 'Karachi', madhab: 'shafi' })!;
+    // Same angles as Karachi, but Maghrib five minutes after sunset.
+    expect(jordan.fajr.getTime()).toBe(karachi.fajr.getTime());
+    expect((jordan.maghrib.getTime() - karachi.maghrib.getTime()) / 60_000).toBe(5);
+  });
+
+  it('sets Isha two hours after Maghrib in Ramadan for Umm al-Qura', () => {
+    const makkah = { latitude: 21.4225, longitude: 39.8262 };
+    const gap = (date: { year: number; month: number; day: number }) => {
+      const times = calculateDayTimes({ date, coordinates: makkah, method: 'UmmAlQura', madhab: 'shafi' })!;
+      return Math.round((times.isha.getTime() - times.maghrib.getTime()) / 60_000);
+    };
+    expect(gap(hijriToCivil({ year: 1448, month: 9, day: 10 }))).toBe(120);
+    expect(gap(hijriToCivil({ year: 1448, month: 10, day: 10 }))).toBe(90);
+    // Other methods with a fixed interval keep it all year.
+    const qatar = methodParameters('Qatar', hijriToCivil({ year: 1448, month: 9, day: 10 }));
+    expect(qatar.ishaInterval).toBe(90);
   });
 });
 
@@ -283,5 +336,78 @@ describe('quran data and search', () => {
     const limited = searchAyahs(index, 'الله', 5);
     expect(limited.matches).toHaveLength(5);
     expect(limited.total).toBeGreaterThan(1500);
+  });
+});
+
+describe('reading progress', () => {
+  it('merges overlapping and adjacent ranges and keeps them sorted', () => {
+    let ranges = addRange([], 5, 7);
+    ranges = addRange(ranges, 1, 2);
+    expect(ranges).toEqual([[1, 2], [5, 7]]);
+    ranges = addRange(ranges, 3, 4);
+    expect(ranges).toEqual([[1, 7]]);
+    ranges = addRange(ranges, 20, 25);
+    ranges = addRange(ranges, 10, 12);
+    ranges = addRange(ranges, 6, 21);
+    expect(ranges).toEqual([[1, 25]]);
+    expect(countAyahs(ranges)).toBe(25);
+    expect(countAyahs(undefined)).toBe(0);
+  });
+
+  it('returns the same ranges when nothing new was read', () => {
+    const ranges = addRange([], 3, 9);
+    expect(addRange(ranges, 4, 8)).toBe(ranges);
+    expect(addRange(ranges, 9, 3)).toBe(ranges);
+    expect(addRange(ranges, 1.5, 2)).toBe(ranges);
+  });
+
+  it('never counts an ayah outside the surah, whatever was stored', () => {
+    expect(sanitizeRanges([[0, 3], [6, 99], 'x', [4, 'y'], [2, 1], [5, 5]], 7)).toEqual([[1, 3], [5, 7]]);
+    expect(sanitizeRanges('junk', 7)).toEqual([]);
+    expect(countAyahs(sanitizeRanges([[1, 999]], 286))).toBe(286);
+  });
+
+  it('needs time in proportion to the text', () => {
+    expect(minimumReadingTime(0)).toBe(0);
+    expect(minimumReadingTime(900)).toBe(2 * minimumReadingTime(450));
+  });
+});
+
+describe('recitation timings', () => {
+  // A three-ayah surah: lead-in until 4s, then ayahs at 4s, 10s and 15s, ending at 21s.
+  const timings = [4000, 10_000, 15_000, 21_000];
+
+  it('addresses one audio file per surah', () => {
+    const source = { host: 'https://cdn.mp3quran.net', folder: 'mahmoud-husary/r1' };
+    expect(recitationUrl(source, 2)).toBe('https://cdn.mp3quran.net/audio/mahmoud-husary/r1/002.mp3');
+    expect(recitationUrl(source, 114)).toMatch(/\/114\.mp3$/);
+  });
+
+  it('accepts only complete, increasing timings', () => {
+    expect(isValidTimings(timings, 3)).toBe(true);
+    expect(isValidTimings(timings, 4)).toBe(false);
+    expect(isValidTimings([4000, 10_000, 10_000, 21_000], 3)).toBe(false);
+    expect(isValidTimings([4000, 10_000.5, 15_000, 21_000], 3)).toBe(false);
+    expect(isValidTimings([-1, 10_000, 15_000, 21_000], 3)).toBe(false);
+    expect(isValidTimings(null, 3)).toBe(false);
+  });
+
+  it('starts the first ayah with the recording, and the others at their own beginning', () => {
+    expect(ayahStartSeconds(timings, 1)).toBe(0);
+    expect(ayahStartSeconds(timings, 2)).toBe(10);
+    expect(ayahStartSeconds(timings, 3)).toBe(15);
+    expect(ayahStartSeconds(timings, 99)).toBe(15);
+    expect(ayahStartSeconds(timings, -4)).toBe(0);
+  });
+
+  it('follows the audio from the lead-in to the last ayah', () => {
+    expect(positionAt(timings, 0)).toEqual({ ayah: 1, leadIn: true });
+    expect(positionAt(timings, 3.99)).toEqual({ ayah: 1, leadIn: true });
+    expect(positionAt(timings, 4)).toEqual({ ayah: 1, leadIn: false });
+    expect(positionAt(timings, 9.99)).toEqual({ ayah: 1, leadIn: false });
+    expect(positionAt(timings, 10)).toEqual({ ayah: 2, leadIn: false });
+    expect(positionAt(timings, 20)).toEqual({ ayah: 3, leadIn: false });
+    // After the last ayah ends the recording may still run for a moment.
+    expect(positionAt(timings, 60)).toEqual({ ayah: 3, leadIn: false });
   });
 });

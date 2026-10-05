@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // App-specific plugins must be registered before the bridge starts.
         registerPlugin(PrayerWidgetsPlugin.class);
+        registerPlugin(SystemSettingsPlugin.class);
         super.onCreate(savedInstanceState);
         // Until the first frame is drawn, show the themed window background
         // (light or dark) through the WebView instead of a white flash.

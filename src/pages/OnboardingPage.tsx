@@ -10,11 +10,10 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import { useCalculationSettings } from '@/components/CalculationSettings';
 import { Directional, LogoMark } from '@/components/icons';
 import { LocationDialog, locationLabel } from '@/components/LocationDialog';
-import { ChoiceDialog, RowGroup, SegmentedControl, SettingItem } from '@/components/settings';
-import { CALCULATION_METHOD_IDS, suggestMethodForCountry } from '@/domain/prayer/methods';
-import { MADHABS } from '@/domain/prayer/types';
+import { RowGroup, SegmentedControl } from '@/components/settings';
 import { usePageTitle } from '@/hooks/useDeviceFeatures';
 import { useDeviceLocation } from '@/hooks/useLocationActions';
 import { useNotificationControls } from '@/hooks/useNotificationControls';
@@ -53,8 +52,9 @@ export default function OnboardingPage() {
   const location = useSavedLocation();
   const device = useDeviceLocation();
   const notification = useNotificationControls();
+  const calculation = useCalculationSettings();
   const [step, setStep] = useState(0);
-  const [dialog, setDialog] = useState<'location' | 'method' | 'madhab' | null>(null);
+  const [locationOpen, setLocationOpen] = useState(false);
   const content = useRef<HTMLDivElement>(null);
   usePageTitle(t('app.name'), t('app.name'));
 
@@ -66,12 +66,6 @@ export default function OnboardingPage() {
     if (step > 0) content.current?.querySelector<HTMLElement>('h1')?.focus();
     window.scrollTo(0, 0);
   }, [step]);
-
-  // Preselect the method conventionally used where the user is.
-  const countryCode = location?.countryCode;
-  useEffect(() => {
-    if (countryCode) updateSettings({ method: suggestMethodForCountry(countryCode) });
-  }, [countryCode]);
 
   const finish = () => {
     updateSettings({ onboarded: true });
@@ -167,7 +161,7 @@ export default function OnboardingPage() {
               >
                 {device.busy ? t('location.locating') : t('location.useDevice')}
               </Button>
-              <Button variant="outlined" size="large" onClick={() => setDialog('location')}>
+              <Button variant="outlined" size="large" onClick={() => setLocationOpen(true)}>
                 {t('location.chooseCity')}
               </Button>
             </Stack>
@@ -177,18 +171,7 @@ export default function OnboardingPage() {
         {current === 'method' && (
           <>
             <StepIntro title={t('onboarding.methodTitle')} body={t('onboarding.methodBody')} />
-            <RowGroup>
-              <SettingItem
-                label={t('settings.method')}
-                description={t(`methods.${settings.method}`)}
-                onClick={() => setDialog('method')}
-              />
-              <SettingItem
-                label={t('settings.madhab')}
-                description={t(`madhab.${settings.madhab}`)}
-                onClick={() => setDialog('madhab')}
-              />
-            </RowGroup>
+            <RowGroup>{calculation.rows}</RowGroup>
           </>
         )}
 
@@ -229,23 +212,8 @@ export default function OnboardingPage() {
         {current === 'welcome' ? t('onboarding.getStarted') : last ? t('onboarding.finish') : t('common.continue')}
       </Button>
 
-      <LocationDialog open={dialog === 'location'} onClose={() => setDialog(null)} />
-      <ChoiceDialog
-        open={dialog === 'method'}
-        title={t('settings.method')}
-        value={settings.method}
-        onChange={(method) => updateSettings({ method })}
-        onClose={() => setDialog(null)}
-        options={CALCULATION_METHOD_IDS.map((value) => ({ value, label: t(`methods.${value}`) }))}
-      />
-      <ChoiceDialog
-        open={dialog === 'madhab'}
-        title={t('settings.madhab')}
-        value={settings.madhab}
-        onChange={(madhab) => updateSettings({ madhab })}
-        onClose={() => setDialog(null)}
-        options={MADHABS.map((value) => ({ value, label: t(`madhab.${value}`), description: t(`madhab.${value}Hint`) }))}
-      />
+      <LocationDialog open={locationOpen} onClose={() => setLocationOpen(false)} />
+      {calculation.dialogs}
     </Box>
   );
 }

@@ -1,3 +1,4 @@
+import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
@@ -63,10 +64,11 @@ export function surahMeta(i18n: I18n, surah: SurahInfo): string {
   return `${i18n.t(`quran.${surah.revelation}`)} · ${i18n.t('quran.ayahCount', { count: surah.ayahs })}`;
 }
 
-/** A row in the surah list. */
-export function QuranSurahCard({ surah }: { surah: SurahInfo }) {
+/** A row in the surah list. `read` is how many of its ayahs have been read. */
+export function QuranSurahCard({ surah, read = 0 }: { surah: SurahInfo; read?: number }) {
   const i18n = useI18n();
   const arabic = i18n.language === 'ar';
+  const complete = read >= surah.ayahs;
 
   return (
     <ButtonBase
@@ -103,6 +105,19 @@ export function QuranSurahCard({ surah }: { surah: SurahInfo }) {
         <Typography variant="body2" color="textSecondary" component="span" sx={{ display: 'block' }}>
           {arabic ? surahMeta(i18n, surah) : `${surah.meaning} · ${surahMeta(i18n, surah)}`}
         </Typography>
+        {read > 0 && (
+          <Typography
+            variant="caption"
+            color="primary"
+            component="span"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}
+          >
+            {complete && <CheckCircleOutlined aria-hidden sx={{ fontSize: '1rem' }} />}
+            {complete
+              ? i18n.t('quran.surahComplete')
+              : i18n.t('quran.surahRead', { percent: Math.max(1, Math.floor((read / surah.ayahs) * 100)) })}
+          </Typography>
+        )}
       </Box>
       {!arabic && (
         <Box

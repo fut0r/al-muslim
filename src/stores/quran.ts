@@ -1,4 +1,5 @@
 import surahsJson from '@/data/quran/surahs.json';
+import { addRange, countAyahs, sanitizeRanges, type AyahRange } from '@/domain/quran/progress';
 import { isValidAyahRef, type AyahRef, type SurahInfo } from '@/domain/quran/types';
 import { asRecord, createPersistentStore, useStore } from './createStore';
 
@@ -11,7 +12,14 @@ export interface Bookmark extends AyahRef {
 
 export interface QuranState {
   bookmarks: Bookmark[];
+  /** Where the reader was last left, to continue from. */
   lastRead: (AyahRef & { at: number }) | null;
+  /**
+   * The ayahs that have actually been read, by surah number. Progress is
+   * counted from these, never from the reading position: opening a late surah
+   * says nothing about the ones before it.
+   */
+  read: Record<number, readonly AyahRange[]>;
 }
 
 function readRef(raw: unknown): AyahRef | null {
@@ -38,9 +46,19 @@ export function sanitizeQuranState(raw: unknown): QuranState {
 
   const lastRef = readRef(data.lastRead);
   const lastAt = Number(asRecord(data.lastRead).at);
+
+  const read: QuranState['read'] = {};
+  for (const [key, value] of Object.entries(asRecord(data.read))) {
+    const surah = surahs[Number(key) - 1];
+    if (!surah || String(surah.id) !== key) continue;
+    const ranges = sanitizeRanges(value, surah.ayahs);
+    if (ranges.length > 0) read[surah.id] = ranges;
+  }
+
   return {
     bookmarks,
     lastRead: lastRef ? { ...lastRef, at: Number.isFinite(lastAt) ? lastAt : 0 } : null,
+    read,
   };
 }
 
@@ -70,4 +88,29 @@ export function setLastRead(ref: AyahRef): void {
     if (last && last.surah === ref.surah && last.ayah === ref.ayah) return previous;
     return { ...previous, lastRead: { surah: ref.surah, ayah: ref.ayah, at: Date.now() } };
   });
+}
+
+/** Records that ayahs `from` to `to` of a surah have been read. */
+export function markRead(surah: number, from: number, to: number): void {
+  const info = surahs[surah - 1];
+  if (!info) return;
+  quranStore.set((previous) => {
+    const current = previous.read[surah] ?? [];
+    const next = addRange(current, Math.max(1, from), Math.min(info.ayahs, to));
+    return next === current ? previous : { ...previous, read: { ...previous.read, [surah]: next } };
+  });
+}
+
+/** How many ayahs of one surah have been read. */
+export function ayahsRead(state: QuranState, surah: number): number {
+  return countAyahs(state.read[surah]);
+}
+
+/** How many ayahs of the whole Quran have been read. */
+export function totalAyahsRead(state: QuranState): number {
+  return Object.values(state.read).reduce((total, ranges) => total + countAyahs(ranges), 0);
+}
+
+export function resetReadingProgress(): void {
+  quranStore.set((previous) => (Object.keys(previous.read).length === 0 ? previous : { ...previous, read: {} }));
 }

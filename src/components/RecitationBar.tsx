@@ -20,6 +20,8 @@ export const RECITATION_BAR_SPACE = 76;
 interface RecitationBarProps {
   recitation: Recitation;
   reciterName: string;
+  /** Whether the surah opens with a basmalah that is not one of its ayahs. */
+  basmalah: boolean;
   onChooseReciter(): void;
 }
 
@@ -27,12 +29,12 @@ interface RecitationBarProps {
  * Playback controls for listening to the surah. It sits above the bottom
  * navigation while something is playing and disappears when playback stops.
  */
-export function RecitationBar({ recitation, reciterName, onChooseReciter }: RecitationBarProps) {
+export function RecitationBar({ recitation, reciterName, basmalah, onChooseReciter }: RecitationBarProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const wide = useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
   const { state } = recitation;
-  if (state.status === 'idle' || !state.item) return null;
+  if (state.status === 'idle' || state.ayah === null) return null;
 
   const failed = state.status === 'error';
   const playing = state.status === 'playing' || state.status === 'loading';
@@ -40,9 +42,9 @@ export function RecitationBar({ recitation, reciterName, onChooseReciter }: Reci
     ? t(state.error === 'offline' ? 'quran.audioOffline' : 'quran.audioFailed')
     : state.status === 'loading'
       ? t('quran.audioLoading')
-      : state.item.basmalah
+      : state.leadIn && basmalah
         ? t('quran.basmalah')
-        : t('quran.playingAyah', { ayah: state.item.ayah });
+        : t('quran.playingAyah', { ayah: state.ayah });
 
   return (
     <Box

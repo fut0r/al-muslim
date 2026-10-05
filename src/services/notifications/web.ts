@@ -9,6 +9,7 @@ import type {
 
 const supported = typeof window !== 'undefined' && 'Notification' in window;
 const MAX_TIMER_MS = 2 ** 31 - 1;
+const TEST_DELAY_MS = 3000;
 const timers = new Set<number>();
 
 function currentPermission(): NotificationPermissionState {
@@ -82,6 +83,12 @@ export const webNotifications: NotificationBackend = {
       }, delay);
       timers.add(timer);
     }
+    return Promise.resolve();
+  },
+
+  sendTest(item, options) {
+    if (options.sound === 'adhan') prepareAdhan();
+    window.setTimeout(() => void show({ ...item, id: 0, at: new Date() }, options), TEST_DELAY_MS);
     return Promise.resolve();
   },
 };

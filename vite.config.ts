@@ -41,7 +41,8 @@ export default defineConfig({
         // including the complete Quran text and the city list.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
         // The adhan is large and optional: the app stores it itself when it is first needed.
-        globIgnores: ['**/audio/**'],
+        // Ayah timings are only of use while streaming a recitation, which needs a connection anyway.
+        globIgnores: ['**/audio/**', '**/data/recitation/**'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         // Take control on the very first visit, so offline works without a reload.

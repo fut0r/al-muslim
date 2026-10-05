@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { getReciter, RECITATION_HOST, type ReciterId } from '@/data/reciters';
-import { recitationQueue, recitationUrl, type RecitationItem } from '@/domain/quran/recitation';
-import type { SurahInfo } from '@/domain/quran/types';
-import { SURAHS } from '@/services/quranRepository';
+import type { ReciterId } from '@/data/reciters';
 import { RecitationPlayer, type RecitationState } from '@/services/recitationPlayer';
-
-function sourceFor(reciterId: ReciterId): (item: RecitationItem) => string {
-  const reciter = getReciter(reciterId);
-  return (item) =>
-    recitationUrl({ host: RECITATION_HOST, edition: reciter.edition, bitrate: reciter.bitrate }, item, SURAHS);
-}
+import { loadRecitation } from '@/services/recitationRepository';
 
 export interface Recitation {
   state: RecitationState;
@@ -25,25 +17,29 @@ export interface Recitation {
 
 /**
  * Listening to one surah. Playback belongs to the reader screen: it stops
- * when the screen is left, and restarts the current ayah if the reciter changes.
+ * when the screen is left, and carries on from the current ayah in the new
+ * voice if the reciter changes.
  */
-export function useRecitation(surah: SurahInfo, reciterId: ReciterId): Recitation {
-  const [player] = useState(() => new RecitationPlayer(sourceFor(reciterId)));
+export function useRecitation(surahId: number, reciterId: ReciterId): Recitation {
+  const [player] = useState(() => new RecitationPlayer());
   const state = useSyncExternalStore(player.subscribe, player.getState, player.getState);
 
   useEffect(() => () => player.stop(), [player]);
 
+  // Does nothing unless something is playing.
   useEffect(() => {
-    player.setSource(sourceFor(reciterId));
-  }, [player, reciterId]);
+    player.changeSource(() => loadRecitation(reciterId, surahId));
+  }, [player, reciterId, surahId]);
 
-  const playFrom = useCallback((ayah: number) => player.play(recitationQueue(surah, ayah)), [player, surah]);
+  const playFrom = useCallback(
+    (ayah: number) => player.play(() => loadRecitation(reciterId, surahId), ayah),
+    [player, reciterId, surahId],
+  );
   const pause = useCallback(() => player.pause(), [player]);
   const resume = useCallback(() => player.resume(), [player]);
   const stop = useCallback(() => player.stop(), [player]);
   const next = useCallback(() => player.next(), [player]);
   const previous = useCallback(() => player.previous(), [player]);
 
-  const ayah = state.item ? (state.item.basmalah ? 1 : state.item.ayah) : null;
-  return { state, ayah, playFrom, pause, resume, stop, next, previous };
+  return { state, ayah: state.ayah, playFrom, pause, resume, stop, next, previous };
 }

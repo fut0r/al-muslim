@@ -8,7 +8,15 @@ import { ar } from '@/i18n/ar';
 import { en } from '@/i18n/en';
 import { adhkarStore, sanitizeAdhkarProgress, setDhikrCount } from './adhkar';
 import { sanitizeLocation } from './location';
-import { quranStore, sanitizeQuranState, toggleBookmark } from './quran';
+import {
+  ayahsRead,
+  markRead,
+  quranStore,
+  resetReadingProgress,
+  sanitizeQuranState,
+  toggleBookmark,
+  totalAyahsRead,
+} from './quran';
 import { sanitizeSettings } from './settings';
 
 describe('stores recover from damaged data', () => {
@@ -27,6 +35,11 @@ describe('stores recover from damaged data', () => {
     expect(['en', 'ar']).toContain(settings.language);
     expect(settings.method).toBe('MuslimWorldLeague');
     expect(settings.madhab).toBe('shafi');
+    // Following the country's convention is the default, and a stored choice is kept.
+    expect(settings.autoCalculation).toBe(true);
+    expect(sanitizeSettings({ autoCalculation: false }).autoCalculation).toBe(false);
+    expect(sanitizeSettings({ reciter: 'maher' }).reciter).toBe('maher');
+    expect(sanitizeSettings({ reciter: 'nobody' }).reciter).toBe('husary');
     expect(settings.notifications.enabled).toBe(false);
     expect(Object.keys(settings.notifications.prayers)).toEqual([...OBLIGATORY_PRAYER_IDS]);
     expect(settings.quranFontScale).toBe(1.8);
@@ -61,7 +74,33 @@ describe('stores recover from damaged data', () => {
     });
     expect(state.bookmarks.map((b) => `${b.surah}:${b.ayah}`)).toEqual(['2:255']);
     expect(state.lastRead).toBeNull();
-    expect(sanitizeQuranState([1, 2, 3])).toEqual({ bookmarks: [], lastRead: null });
+    expect(sanitizeQuranState([1, 2, 3])).toEqual({ bookmarks: [], lastRead: null, read: {} });
+  });
+
+  it('keeps only read ayahs that exist', () => {
+    const state = sanitizeQuranState({
+      read: { 1: [[1, 3], [3, 99]], 2: [[280, 290]], 115: [[1, 2]], x: [[1, 2]], 112: 'junk', 114: [[7, 9]] },
+    });
+    expect(state.read).toEqual({ 1: [[1, 7]], 2: [[280, 286]] });
+    expect(ayahsRead(state, 1)).toBe(7);
+    expect(ayahsRead(state, 3)).toBe(0);
+    expect(totalAyahsRead(state)).toBe(14);
+  });
+
+  it('counts progress from the ayahs read, not from the position', () => {
+    resetReadingProgress();
+    // Reading the end of a late surah says nothing about the surahs before it.
+    markRead(114, 4, 6);
+    expect(totalAyahsRead(quranStore.get())).toBe(3);
+    markRead(114, 1, 4);
+    markRead(114, 2, 3);
+    expect(quranStore.get().read[114]).toEqual([[1, 6]]);
+    markRead(2, 250, 999);
+    expect(ayahsRead(quranStore.get(), 2)).toBe(37);
+    markRead(999, 1, 5);
+    expect(totalAyahsRead(quranStore.get())).toBe(43);
+    resetReadingProgress();
+    expect(quranStore.get().read).toEqual({});
   });
 
   it('ignores malformed adhkar counts', () => {

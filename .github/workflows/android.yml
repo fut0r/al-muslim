@@ -56,6 +56,20 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
+      # Prayer notifications depend on these. They come from two manifests that
+      # are merged at build time, so check what the finished APK really declares.
+      - name: Check the permissions the APK declares
+        run: |
+          aapt2="$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -n 1)"
+          permissions="$("$aapt2" dump permissions android/app/build/outputs/apk/debug/app-debug.apk)"
+          echo "$permissions"
+          for name in INTERNET POST_NOTIFICATIONS USE_EXACT_ALARM RECEIVE_BOOT_COMPLETED; do
+            if ! echo "$permissions" | grep -q "android.permission.$name"; then
+              echo "::error::The APK does not declare android.permission.$name"
+              exit 1
+            fi
+          done
+
       - uses: actions/upload-artifact@v4
         with:
           name: al-muslim-debug-apk

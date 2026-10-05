@@ -28,7 +28,7 @@ export function calculateDayTimes(input: PrayerCalculationInput): DayTimes | nul
   if (!isValidCoordinates(coordinates)) return null;
 
   const adhanCoordinates = new AdhanCoordinates(coordinates.latitude, coordinates.longitude);
-  const parameters = methodParameters(method);
+  const parameters = methodParameters(method, date);
   parameters.madhab = madhab === 'hanafi' ? AdhanMadhab.Hanafi : AdhanMadhab.Shafi;
   // Far from the equator twilight may never end; these rules keep Fajr and
   // Isha at reasonable times instead of leaving them undefined.

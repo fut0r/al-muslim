@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { calculateDayTimes } from '@/domain/prayer/calculate';
+import { resolveCalculation, type Calculation } from '@/domain/prayer/methods';
 import { computePrayerStatus, type PrayerStatus } from '@/domain/prayer/schedule';
 import type { DayTimes } from '@/domain/prayer/types';
 import { addDays, civilDateInZone, civilDateKey, type CivilDate } from '@/domain/time';
@@ -17,10 +18,23 @@ export function useToday(now: Date): CivilDate {
   return useMemo(() => today, [key]);
 }
 
+/**
+ * The calculation method and madhab in effect: those of the country the saved
+ * location is in, unless the user has chosen their own.
+ */
+export function useCalculation(): Calculation & { automatic: boolean } {
+  const { autoCalculation, method, madhab } = useSettings();
+  const countryCode = useSavedLocation()?.countryCode;
+  return useMemo(
+    () => ({ ...resolveCalculation({ autoCalculation, method, madhab }, countryCode), automatic: autoCalculation }),
+    [autoCalculation, method, madhab, countryCode],
+  );
+}
+
 /** Prayer times for one civil day at the saved location, or null if unavailable. */
 export function useDayTimes(date: CivilDate): DayTimes | null {
   const location = useSavedLocation();
-  const { method, madhab } = useSettings();
+  const { method, madhab } = useCalculation();
   const latitude = location?.latitude;
   const longitude = location?.longitude;
 
