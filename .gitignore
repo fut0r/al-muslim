@@ -17,6 +17,8 @@ android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.config.json
 android/app/src/main/assets/capacitor.plugins.json
 android/capacitor-cordova-android-plugins/
+# Copied from public/audio by scripts/sync-android-assets.mjs
+android/app/src/main/res/raw/adhan.mp3
 *.apk
 *.aab
 *.jks

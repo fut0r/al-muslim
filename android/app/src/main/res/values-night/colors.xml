@@ -4,4 +4,11 @@
     <color name="brand">#6BC895</color>
     <color name="app_background">#101311</color>
     <color name="splash_mark">#6BC895</color>
+
+    <!-- Home screen widgets. -->
+    <color name="widget_surface">#181C19</color>
+    <color name="widget_text">#E7EBE7</color>
+    <color name="widget_text_secondary">#A0AAA3</color>
+    <color name="widget_divider">#2A302C</color>
+    <color name="widget_soft">#17291F</color>
 </resources>

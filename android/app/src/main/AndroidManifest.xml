@@ -2,9 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        The WebView needs this permission to load the app from its own local
-        origin (https://localhost). Al-Muslim itself makes no network requests:
-        the content security policy in index.html only allows that origin.
+        Needed by the WebView to load the app from its own local origin, and to
+        stream Quran recitations when the user presses play. Nothing else in
+        Al-Muslim uses the network: the content security policy in index.html
+        only allows the app's own origin and the recitation host.
     -->
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -50,6 +51,31 @@
             </intent-filter>
 
         </activity>
+
+        <!-- Home screen widgets. They display the schedule the app hands over. -->
+        <receiver
+            android:name=".widgets.NextPrayerWidget"
+            android:exported="true"
+            android:label="@string/widget_next_prayer_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_next_prayer_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.PrayerTimesWidget"
+            android:exported="true"
+            android:label="@string/widget_prayer_times_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_prayer_times_info" />
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -4,9 +4,10 @@ import { planNotifications } from '@/domain/prayer/notificationPlan';
 import type { DayTimes } from '@/domain/prayer/types';
 import { addDays, civilDateInZone, type CivilDate } from '@/domain/time';
 import { useI18n } from '@/i18n';
-import { formatTime } from '@/i18n/format';
+import { formatLocation, formatTime } from '@/i18n/format';
 import { locationPermission } from '@/services/geolocation';
 import { notifications } from '@/services/notifications';
+import { buildWidgetPayload, updateWidgets, widgetsSupported } from '@/services/widgets';
 import { locationStore, useSavedLocation } from '@/stores/location';
 import { useSettings } from '@/stores/settings';
 import { saveDeviceLocation } from './useLocationActions';
@@ -37,14 +38,21 @@ export function usePrayerNotificationSync(): void {
 
   useEffect(() => {
     let cancelled = false;
-    const channel = {
-      name: i18n.t('notification.channelName'),
-      description: i18n.t('notification.channelDescription'),
+    const options = {
+      sound: preferences.sound,
+      channel: {
+        name: i18n.t('notification.channelName'),
+        description: i18n.t('notification.channelDescription'),
+      },
+      adhanChannel: {
+        name: i18n.t('notification.adhanChannelName'),
+        description: i18n.t('notification.adhanChannelDescription'),
+      },
     };
 
     const sync = async () => {
       if (!preferences.enabled || !location) {
-        await notifications.replaceSchedule([], channel);
+        await notifications.replaceSchedule([], options);
         return;
       }
       if ((await notifications.permission()) !== 'granted') return;
@@ -69,9 +77,10 @@ export function usePrayerNotificationSync(): void {
             at: item.at,
             title: i18n.t('notification.title', { prayer, time }),
             body: i18n.t('notification.body', { prayer }),
+            label: prayer,
           };
         }),
-        channel,
+        options,
       );
     };
 
@@ -80,6 +89,33 @@ export function usePrayerNotificationSync(): void {
       cancelled = true;
     };
   }, [i18n, location, method, madhab, hour12, preferences, resumes]);
+}
+
+/**
+ * Hands the Android home screen widgets a fresh schedule whenever something
+ * they show changes, and each time the app comes back to the foreground.
+ */
+export function useWidgetSync(): void {
+  const i18n = useI18n();
+  const location = useSavedLocation();
+  const { method, madhab, hour12, hijriAdjustment } = useSettings();
+  const resumes = useResumeCount();
+
+  useEffect(() => {
+    if (!widgetsSupported) return;
+    void updateWidgets(
+      buildWidgetPayload({
+        i18n,
+        now: new Date(),
+        location,
+        locationLabel: formatLocation(i18n, location),
+        method,
+        madhab,
+        hour12,
+        hijriAdjustment,
+      }),
+    );
+  }, [i18n, location, method, madhab, hour12, hijriAdjustment, resumes]);
 }
 
 const REFRESH_AFTER_MS = 60 * 60 * 1000;

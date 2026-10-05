@@ -1,6 +1,11 @@
 import type { NotificationBackend, NotificationPermissionState } from './types';
 
-const CHANNEL_ID = 'prayer-times';
+// Android fixes a channel's sound when it is first created, so each sound has
+// its own channel. Bump the suffix if the adhan recording is ever replaced.
+const DEFAULT_CHANNEL = 'prayer-times';
+const ADHAN_CHANNEL = 'prayer-adhan-v1';
+/** Bundled in android/app/src/main/res/raw (copied there by scripts/sync-android-assets.mjs). */
+const ADHAN_SOUND = 'adhan.mp3';
 
 async function plugin() {
   return (await import('@capacitor/local-notifications')).LocalNotifications;
@@ -13,7 +18,8 @@ function toState(display: string): NotificationPermissionState {
 
 /**
  * Schedules prayer notifications with the operating system, so they arrive
- * even when the app is closed or the device is idle. No server is involved.
+ * (and the adhan plays) even when the app is closed or the device is idle.
+ * No server is involved.
  */
 export const nativeNotifications: NotificationBackend = {
   deliversWhenClosed: true,
@@ -36,7 +42,7 @@ export const nativeNotifications: NotificationBackend = {
     }
   },
 
-  async replaceSchedule(items, channel) {
+  async replaceSchedule(items, options) {
     const notifications = await plugin();
     const pending = await notifications.getPending();
     if (pending.notifications.length > 0) {
@@ -44,9 +50,20 @@ export const nativeNotifications: NotificationBackend = {
     }
     if (items.length === 0) return;
 
+    const adhan = options.sound === 'adhan';
+    const channelId = adhan ? ADHAN_CHANNEL : DEFAULT_CHANNEL;
+    const names = adhan ? options.adhanChannel : options.channel;
+
     // No-op on platforms without channels; safe to repeat on Android.
     await notifications
-      .createChannel({ id: CHANNEL_ID, name: channel.name, description: channel.description, importance: 4, visibility: 1 })
+      .createChannel({
+        id: channelId,
+        name: names.name,
+        description: names.description,
+        importance: 4,
+        visibility: 1,
+        ...(adhan ? { sound: ADHAN_SOUND } : {}),
+      })
       .catch(() => undefined);
 
     await notifications.schedule({
@@ -54,7 +71,9 @@ export const nativeNotifications: NotificationBackend = {
         id: item.id,
         title: item.title,
         body: item.body,
-        channelId: CHANNEL_ID,
+        channelId,
+        // Read on Android 7 and earlier, which have no channels.
+        ...(adhan ? { sound: ADHAN_SOUND } : {}),
         schedule: { at: item.at, allowWhileIdle: true },
       })),
     });

@@ -5,11 +5,16 @@ export interface ScheduledNotification {
   at: Date;
   title: string;
   body: string;
+  /** Short name of what the notification is for (the prayer), shown while the adhan plays. */
+  label: string;
 }
 
-export interface NotificationChannelInfo {
-  name: string;
-  description: string;
+export interface NotificationOptions {
+  /** Whether the adhan or the device's ordinary notification sound is played. */
+  sound: 'adhan' | 'default';
+  /** Names shown in the system notification settings. */
+  channel: { name: string; description: string };
+  adhanChannel: { name: string; description: string };
 }
 
 /**
@@ -26,7 +31,7 @@ export interface NotificationBackend {
   permission(): Promise<NotificationPermissionState>;
   requestPermission(): Promise<NotificationPermissionState>;
   /** Replaces everything previously scheduled with `items` (empty clears all). */
-  replaceSchedule(items: ScheduledNotification[], channel: NotificationChannelInfo): Promise<void>;
+  replaceSchedule(items: ScheduledNotification[], options: NotificationOptions): Promise<void>;
   /** Android 12+: whether notifications may fire at the exact minute. */
   exactAlarmsAllowed?(): Promise<boolean>;
   openExactAlarmSettings?(): Promise<boolean>;

@@ -1,5 +1,6 @@
 import type { HijriDate } from '@/domain/hijri';
 import { civilToUtcNoon, type CivilDate } from '@/domain/time';
+import type { SavedLocation } from '@/stores/location';
 import type { I18n } from './index';
 
 const formatters = new Map<string, Intl.DateTimeFormat>();
@@ -76,4 +77,12 @@ const ARABIC_INDIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 /** Arabic-Indic numerals, as used for ayah numbers in the mushaf. */
 export function toArabicIndic(value: number): string {
   return String(value).replace(/\d/g, (digit) => ARABIC_INDIC_DIGITS[Number(digit)] ?? digit);
+}
+
+/** Human-readable name of a saved location in the current language. */
+export function formatLocation(i18n: I18n, location: SavedLocation | null): string {
+  if (!location) return i18n.t('location.notSet');
+  const name = (i18n.language === 'ar' && location.nameAr) || location.name;
+  if (!name) return i18n.t('location.custom');
+  return location.source === 'city' ? name : i18n.t('location.near', { city: name });
 }

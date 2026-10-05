@@ -215,6 +215,7 @@ export function ChoiceDialog<T extends string>({
   options,
   onChange,
   onClose,
+  note,
 }: {
   open: boolean;
   title: string;
@@ -222,6 +223,8 @@ export function ChoiceDialog<T extends string>({
   options: Choice<T>[];
   onChange(value: T): void;
   onClose(): void;
+  /** Small print shown under the options. */
+  note?: string;
 }) {
   const titleId = useId();
   return (
@@ -259,6 +262,11 @@ export function ChoiceDialog<T extends string>({
           />
         ))}
       </RadioGroup>
+      {note && (
+        <Typography variant="caption" color="textSecondary" component="p" sx={{ px: 3, pb: 2.5 }}>
+          {note}
+        </Typography>
+      )}
     </Dialog>
   );
 }

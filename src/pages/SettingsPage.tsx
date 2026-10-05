@@ -5,25 +5,30 @@ import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
+import { useAdhanState } from '@/components/AdhanBanner';
 import { AppHeader } from '@/components/AppHeader';
 import { LocationDialog, locationLabel } from '@/components/LocationDialog';
 import { PageContent } from '@/components/Page';
 import { ChoiceDialog, SegmentedControl, SettingItem, SettingsSection, SwitchItem } from '@/components/settings';
+import { getReciter, RECITERS } from '@/data/reciters';
 import { CALCULATION_METHOD_IDS } from '@/domain/prayer/methods';
 import { MADHABS, OBLIGATORY_PRAYER_IDS } from '@/domain/prayer/types';
 import { usePageTitle } from '@/hooks/useDeviceFeatures';
 import { saveDeviceLocation } from '@/hooks/useLocationActions';
 import { useNotificationControls } from '@/hooks/useNotificationControls';
 import { useI18n } from '@/i18n';
+import { adhanPlayer } from '@/services/adhanPlayer';
 import { countryName } from '@/services/cities';
 import { locationPermission, type LocationPermission } from '@/services/geolocation';
 import { hapticsSupported } from '@/services/haptics';
 import { notifications } from '@/services/notifications';
 import { wakeLockSupported } from '@/services/wakeLock';
+import { pinWidget, widgetsSupported, type WidgetKind } from '@/services/widgets';
 import { useSavedLocation } from '@/stores/location';
 import {
   HIJRI_ADJUSTMENT_RANGE,
   LANGUAGES,
+  NOTIFICATION_SOUNDS,
   THEME_PREFERENCES,
   updateNotificationSettings,
   updateSettings,
@@ -46,7 +51,8 @@ export default function SettingsPage() {
   const settings = useSettings();
   const location = useSavedLocation();
   const notification = useNotificationControls();
-  const [dialog, setDialog] = useState<'method' | 'madhab' | 'location' | null>(null);
+  const adhan = useAdhanState();
+  const [dialog, setDialog] = useState<'method' | 'madhab' | 'location' | 'reciter' | null>(null);
   const [permission, setPermission] = useState<LocationPermission>('unknown');
   const [exactAlarms, setExactAlarms] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -93,6 +99,19 @@ export default function SettingsPage() {
     setMessage(failure ? t(`location.${failure}`) : t('location.updated'));
   };
 
+  const toggleAdhanPreview = async () => {
+    if (adhan.playing) {
+      adhanPlayer.stop();
+    } else if (!(await adhanPlayer.play())) {
+      setMessage(t('adhan.failed'));
+    }
+  };
+
+  const addWidget = async (widget: WidgetKind) => {
+    if (!(await pinWidget(widget))) setMessage(t('widgets.pinUnsupported'));
+  };
+
+  const reciter = getReciter(settings.reciter);
   const adjustment = settings.hijriAdjustment;
   const locationDetail = location
     ? [
@@ -207,6 +226,34 @@ export default function SettingsPage() {
                 }
               />
             ))}
+          {notificationsOn && (
+            <SettingItem
+              label={t('settings.notificationSound')}
+              description={
+                settings.notifications.sound === 'adhan'
+                  ? notifications.deliversWhenClosed
+                    ? t('settings.adhanBy')
+                    : `${t('settings.adhanBy')} ${t('settings.adhanWebHint')}`
+                  : undefined
+              }
+            >
+              <SegmentedControl
+                label={t('settings.notificationSound')}
+                value={settings.notifications.sound}
+                onChange={(sound) => updateNotificationSettings({ sound })}
+                options={NOTIFICATION_SOUNDS.map((value) => ({
+                  value,
+                  label: t(value === 'adhan' ? 'settings.soundAdhan' : 'settings.soundDefault'),
+                }))}
+              />
+            </SettingItem>
+          )}
+          {notificationsOn && settings.notifications.sound === 'adhan' && (
+            <SettingItem
+              label={adhan.playing ? t('adhan.stop') : t('settings.previewAdhan')}
+              onClick={() => void toggleAdhanPreview()}
+            />
+          )}
           {notificationsOn && !exactAlarms && notifications.openExactAlarmSettings && (
             <SettingItem
               label={t('settings.exactAlarms')}
@@ -215,6 +262,29 @@ export default function SettingsPage() {
             />
           )}
         </SettingsSection>
+
+        <SettingsSection title={t('settings.quran')}>
+          <SettingItem
+            label={t('quran.reciter')}
+            description={i18n.language === 'ar' ? reciter.name.ar : reciter.name.en}
+            onClick={() => setDialog('reciter')}
+          />
+        </SettingsSection>
+
+        {widgetsSupported && (
+          <SettingsSection title={t('widgets.title')}>
+            <SettingItem
+              label={t('widgets.addNext')}
+              description={t('widgets.addNextHint')}
+              onClick={() => void addWidget('next')}
+            />
+            <SettingItem
+              label={t('widgets.addTimes')}
+              description={t('widgets.addTimesHint')}
+              onClick={() => void addWidget('times')}
+            />
+          </SettingsSection>
+        )}
 
         <SettingsSection title={t('settings.haptics')}>
           <SwitchItem
@@ -278,6 +348,19 @@ export default function SettingsPage() {
           value,
           label: t(`madhab.${value}`),
           description: t(`madhab.${value}Hint`),
+        }))}
+      />
+      <ChoiceDialog
+        open={dialog === 'reciter'}
+        title={t('quran.reciter')}
+        value={settings.reciter}
+        onChange={(value) => updateSettings({ reciter: value })}
+        onClose={() => setDialog(null)}
+        note={t('quran.audioNote')}
+        options={RECITERS.map((item) => ({
+          value: item.id,
+          label: i18n.language === 'ar' ? item.name.ar : item.name.en,
+          description: i18n.language === 'ar' ? item.detail.ar : item.detail.en,
         }))}
       />
       <LocationDialog open={dialog === 'location'} onClose={() => setDialog(null)} />

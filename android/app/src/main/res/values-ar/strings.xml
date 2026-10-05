@@ -1,5 +1,19 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">المسلم</string>
     <string name="title_activity_main">المسلم</string>
+
+    <string name="widget_next_prayer_name">الصلاة القادمة</string>
+    <string name="widget_next_prayer_description">الصلاة القادمة مع عدّ تنازلي حي</string>
+    <string name="widget_prayer_times_name">مواقيت الصلاة</string>
+    <string name="widget_prayer_times_description">مواقيت صلاة اليوم في لمحة</string>
+    <string name="widget_open_app">افتح المسلم لعرض مواقيت الصلاة</string>
+    <string name="widget_sample_prayer">العصر</string>
+    <string name="widget_sample_time">3:07 م</string>
+    <string name="widget_fajr">الفجر</string>
+    <string name="widget_sunrise">الشروق</string>
+    <string name="widget_dhuhr">الظهر</string>
+    <string name="widget_asr">العصر</string>
+    <string name="widget_maghrib">المغرب</string>
+    <string name="widget_isha">العشاء</string>
 </resources>

@@ -40,6 +40,8 @@ export default defineConfig({
         // Everything the app needs is precached so it works fully offline,
         // including the complete Quran text and the city list.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
+        // The adhan is large and optional: the app stores it itself when it is first needed.
+        globIgnores: ['**/audio/**'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         // Take control on the very first visit, so offline works without a reload.

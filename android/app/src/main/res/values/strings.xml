@@ -1,7 +1,26 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Al-Muslim</string>
     <string name="title_activity_main">Al-Muslim</string>
     <string name="package_name">io.github.fut0r.almuslim</string>
     <string name="custom_url_scheme">io.github.fut0r.almuslim</string>
+
+    <!--
+        Home screen widgets. Live text comes from the app in the user's language;
+        these are the names in the widget picker and the placeholders shown
+        before the first update.
+    -->
+    <string name="widget_next_prayer_name">Next prayer</string>
+    <string name="widget_next_prayer_description">The next prayer with a live countdown</string>
+    <string name="widget_prayer_times_name">Prayer times</string>
+    <string name="widget_prayer_times_description">Today\'s prayer times at a glance</string>
+    <string name="widget_open_app">Open Al-Muslim to show prayer times</string>
+    <string name="widget_sample_prayer">Asr</string>
+    <string name="widget_sample_time">3:07 PM</string>
+    <string name="widget_fajr">Fajr</string>
+    <string name="widget_sunrise">Sunrise</string>
+    <string name="widget_dhuhr">Dhuhr</string>
+    <string name="widget_asr">Asr</string>
+    <string name="widget_maghrib">Maghrib</string>
+    <string name="widget_isha">Isha</string>
 </resources>

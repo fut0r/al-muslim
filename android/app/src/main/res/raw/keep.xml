@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The adhan is referenced by name from the notification channel, so resource shrinking must keep it. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@raw/adhan" />
