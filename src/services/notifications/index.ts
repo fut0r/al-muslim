@@ -4,9 +4,27 @@ import { nativeNotifications } from './native';
 import type { NotificationBackend, NotificationOptions } from './types';
 import { webNotifications } from './web';
 
-export type { NotificationBackend, NotificationOptions, NotificationPermissionState, ScheduledNotification } from './types';
+export type {
+  NotificationBackend,
+  NotificationOptions,
+  NotificationPermissionState,
+  NotificationStatus,
+  ScheduledNotification,
+} from './types';
 
 export const notifications: NotificationBackend = isNative ? nativeNotifications : webNotifications;
+
+const scheduleListeners = new Set<() => void>();
+
+/** Tells the screens that show the notification status that the schedule was just rewritten. */
+export function notifyScheduleChanged(): void {
+  scheduleListeners.forEach((listener) => listener());
+}
+
+export function onScheduleChanged(listener: () => void): () => void {
+  scheduleListeners.add(listener);
+  return () => scheduleListeners.delete(listener);
+}
 
 /** The chosen sound, with the channel names the system settings show for it. */
 export function notificationOptions(i18n: I18n, sound: NotificationOptions['sound']): NotificationOptions {

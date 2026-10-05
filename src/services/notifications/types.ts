@@ -18,6 +18,31 @@ export interface NotificationOptions {
 }
 
 /**
+ * What the system actually has, as opposed to what the app asked for. Shown on
+ * the notification status screen so that a notification which does not arrive
+ * can be explained instead of guessed at.
+ */
+export interface NotificationStatus {
+  platform: 'android' | 'web';
+  permission: NotificationPermissionState;
+  /** How many notifications are waiting, and when the next one is due. */
+  pending: number;
+  next: Date | null;
+  /** When a notification was last shown by the app, if it is known. */
+  lastShown: Date | null;
+  /** Android: alarms may go off at their exact minute. */
+  exactTiming?: boolean;
+  /** Android: the user has silenced the notification category in the system settings. */
+  channelBlocked?: boolean;
+  /** Android: the system may stop the app in the background to save battery. */
+  batteryRestricted?: boolean;
+  /** Model and system version, for reporting a problem. */
+  device?: string;
+  /** The last thing that went wrong, in technical terms. */
+  error?: string;
+}
+
+/**
  * Local notifications. Nothing here talks to a server: notifications are
  * scheduled on the device from locally calculated prayer times.
  */
@@ -34,12 +59,14 @@ export interface NotificationBackend {
   replaceSchedule(items: ScheduledNotification[], options: NotificationOptions): Promise<void>;
   /** Delivers one notification in a few seconds, with the chosen sound, to confirm that delivery works. */
   sendTest(item: Pick<ScheduledNotification, 'title' | 'body' | 'label'>, options: NotificationOptions): Promise<void>;
-  /** Android 12+: whether notifications may fire at the exact minute. */
-  exactAlarmsAllowed?(): Promise<boolean>;
-  openExactAlarmSettings?(): Promise<boolean>;
+  status(): Promise<NotificationStatus>;
+  /** Android 12: opens the system switch that lets alarms go off at the exact minute. */
+  openExactAlarmSettings?(): Promise<void>;
   /**
    * Opens the system screen where notifications for this app are allowed.
    * Resolves to false when there is no such screen to open (the browser).
    */
   openSettings?(): Promise<boolean>;
+  /** Asks the system to let the app run in the background. */
+  openBatterySettings?(): Promise<void>;
 }

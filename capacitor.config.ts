@@ -23,10 +23,6 @@ const config: CapacitorConfig = {
       insetsHandling: 'css',
       initialViewportFitValueHint: 'cover',
     },
-    LocalNotifications: {
-      smallIcon: 'ic_stat_prayer',
-      iconColor: '#1C6B4A',
-    },
   },
 };
 

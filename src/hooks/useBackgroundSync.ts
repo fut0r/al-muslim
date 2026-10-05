@@ -6,7 +6,7 @@ import { addDays, civilDateInZone, type CivilDate } from '@/domain/time';
 import { useI18n } from '@/i18n';
 import { formatLocation, formatTime } from '@/i18n/format';
 import { locationPermission } from '@/services/geolocation';
-import { notificationOptions, notifications } from '@/services/notifications';
+import { notificationOptions, notifications, notifyScheduleChanged } from '@/services/notifications';
 import { buildWidgetPayload, updateWidgets, widgetsSupported } from '@/services/widgets';
 import { locationStore, useSavedLocation } from '@/stores/location';
 import { useSettings } from '@/stores/settings';
@@ -77,7 +77,11 @@ export function usePrayerNotificationSync(): void {
       );
     };
 
-    sync().catch(() => undefined); // Scheduling is best effort; the app itself is unaffected.
+    // Scheduling is best effort and never disturbs the app; a failure is kept
+    // by the backend and shown on the notification status screen.
+    sync()
+      .catch(() => undefined)
+      .finally(notifyScheduleChanged);
     return () => {
       cancelled = true;
     };

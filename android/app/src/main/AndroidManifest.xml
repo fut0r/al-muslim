@@ -17,20 +17,36 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <!--
-        Prayer notifications. POST_NOTIFICATIONS and RECEIVE_BOOT_COMPLETED are
-        declared by the local notifications plugin.
+        Prayer notifications, scheduled and shown by the app itself (see
+        .notifications): permission to show them, and to set the alarms again
+        after the phone restarts.
 
         A prayer time has to be announced at its minute, so the app needs exact
         alarms. On Android 13 and later USE_EXACT_ALARM grants that at install
         time; without it Android 14 leaves exact alarms off and the user would
         have to find the "Alarms & reminders" switch in the system settings.
-        SCHEDULE_EXACT_ALARM (declared by the plugin) is then only needed on
-        Android 12, hence the version limit.
+        SCHEDULE_EXACT_ALARM is then only needed on Android 12, hence the
+        version limit.
     -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
         android:maxSdkVersion="32" />
+    <!--
+        Lets the user allow the app to run in the background from a single
+        system prompt. Some phones otherwise drop a closed app's alarms.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!--
+        Listening to a recitation with the app in the background: a media
+        playback service with its notification, kept awake while it streams.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- None of these are required, so the app installs on every device. -->
     <uses-feature android:name="android.hardware.location" android:required="false" />
@@ -62,6 +78,24 @@
             </intent-filter>
 
         </activity>
+
+        <!-- Shows each prayer notification when its alarm goes off, and sets the alarms again after a restart. -->
+        <receiver
+            android:name=".notifications.PrayerAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Keeps a recitation playing outside the app, with media controls. -->
+        <service
+            android:name=".media.RecitationPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <!-- Home screen widgets. They display the schedule the app hands over. -->
         <receiver

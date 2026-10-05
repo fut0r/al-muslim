@@ -37,6 +37,7 @@ import { getReciter, RECITERS } from '@/data/reciters';
 import { minimumReadingTime } from '@/domain/quran/progress';
 import { showsBasmalah } from '@/domain/quran/types';
 import { useKeepAwake, usePageTitle } from '@/hooks/useDeviceFeatures';
+import { useMediaControls } from '@/hooks/useMediaControls';
 import { useRecitation } from '@/hooks/useRecitation';
 import { useI18n } from '@/i18n';
 import { getSurah } from '@/services/quranRepository';
@@ -300,6 +301,28 @@ function Reader({ surahId }: { surahId: number }) {
       ?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
   }, [playingAyah]);
   const listening = recitation.state.status !== 'idle';
+
+  // What the system's media controls show while listening, in and out of the app.
+  const surahTitle = surahDisplayName(i18n, surah);
+  useMediaControls(recitation, {
+    title:
+      playingAyah === null
+        ? surahTitle
+        : recitation.state.leadIn && showsBasmalah(surahId)
+          ? `${surahTitle} · ${t('quran.basmalah')}`
+          : t('quran.ayahRef', { surah: surahTitle, ayah: playingAyah }),
+    artist: reciterName,
+    album: t('quran.title'),
+    hasNext: playingAyah !== null && playingAyah < surah.ayahs,
+    labels: {
+      channel: t('quran.playerChannel'),
+      play: t('quran.play'),
+      pause: t('quran.pause'),
+      next: t('quran.nextAyah'),
+      previous: t('quran.previousAyah'),
+      stop: t('quran.stopListening'),
+    },
+  });
 
   const onSelect = useCallback((ayah: number, anchor: HTMLElement) => setMenu({ ayah, anchor }), [setMenu]);
   const bookmarkedAyahs = useMemo(

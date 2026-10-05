@@ -1,6 +1,6 @@
 /**
  * The reciters offered for listening: three classic Egyptian masters and
- * three contemporary imams, all household names across the Arab world.
+ * four contemporary imams, all household names across the Arab world.
  *
  * Audio is each reciter's own complete murattal recording in the mp3quran.net
  * library, one file per surah. `folder` is that recording's place on the
@@ -45,6 +45,13 @@ export const RECITERS = [
     detail: { ar: 'السعودية · إمام المسجد الحرام', en: 'Saudi Arabia · Imam of Masjid al-Haram' },
     folder: 'maher-muaiqly/r3',
     read: 133,
+  },
+  {
+    id: 'ghamdi',
+    name: { ar: 'سعد الغامدي', en: 'Saad Al-Ghamdi' },
+    detail: { ar: 'السعودية', en: 'Saudi Arabia' },
+    folder: 'saad-ghamdi/r1',
+    read: 30,
   },
   {
     id: 'alafasy',

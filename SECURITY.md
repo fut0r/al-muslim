@@ -31,7 +31,9 @@ a report:
   completeness when loaded.
 - The Android app requests location and notification permissions only when the user enables the
   corresponding feature, and disables cloud backup of app data. It declares `USE_EXACT_ALARM` so
-  that prayer notifications fire at their minute; nothing else is scheduled with it.
+  that prayer notifications fire at their minute; nothing else is scheduled with it. The foreground
+  service and wake lock permissions are used only while a recitation is playing, and the battery
+  optimisation prompt only appears when the user asks for it in the settings.
 
 If a backend or sync feature is ever added it must be strictly optional, use HTTPS, validate all
 input on the server, keep secrets out of the client and store tokens securely.

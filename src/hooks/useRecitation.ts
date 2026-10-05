@@ -13,6 +13,10 @@ export interface Recitation {
   stop(): void;
   next(): void;
   previous(): void;
+  /** Moves to a moment in the recording, in seconds. */
+  seekTo(seconds: number): void;
+  /** Where the audio is, in seconds, and how long the recording is once that is known. */
+  progress(): { position: number; duration: number | null };
 }
 
 /**
@@ -40,6 +44,8 @@ export function useRecitation(surahId: number, reciterId: ReciterId): Recitation
   const stop = useCallback(() => player.stop(), [player]);
   const next = useCallback(() => player.next(), [player]);
   const previous = useCallback(() => player.previous(), [player]);
+  const seekTo = useCallback((seconds: number) => player.seekTo(seconds), [player]);
+  const progress = useCallback(() => player.getProgress(), [player]);
 
-  return { state, ayah: state.ayah, playFrom, pause, resume, stop, next, previous };
+  return { state, ayah: state.ayah, playFrom, pause, resume, stop, next, previous, seekTo, progress };
 }

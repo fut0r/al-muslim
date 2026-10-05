@@ -87,6 +87,29 @@ export class RecitationPlayer {
     this.seekToAyah((this.state.ayah ?? 2) - 1);
   }
 
+  /** Moves to a moment in the recording, in seconds: the seek bar of the system's media controls. */
+  seekTo(seconds: number): void {
+    const track = this.track;
+    if (!track || this.state.status === 'idle' || !Number.isFinite(seconds)) return;
+    this.pendingSeek = Math.max(0, seconds);
+    const position = positionAt(track.timings, this.pendingSeek);
+    this.setState({ ...this.state, ayah: position.ayah, leadIn: position.leadIn, error: null });
+    this.applySeek();
+  }
+
+  /** Where the audio is, in seconds, and how long the recording is once that is known. */
+  getProgress(): { position: number; duration: number | null } {
+    const audio = this.audio;
+    const track = this.track;
+    if (!audio || !track) return { position: 0, duration: null };
+    const known = Number.isFinite(audio.duration) && audio.duration > 0;
+    return {
+      position: this.pendingSeek ?? audio.currentTime,
+      // Until the audio says, the end of the last ayah is close enough.
+      duration: known ? audio.duration : track.timings[track.timings.length - 1]! / 1000,
+    };
+  }
+
   /** Switches to another recording of the same surah and carries on from the current ayah. */
   changeSource(load: () => Promise<RecitationTrack>): void {
     if (this.state.status === 'idle' || this.state.ayah === null) return;

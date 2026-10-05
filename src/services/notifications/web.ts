@@ -11,6 +11,9 @@ const supported = typeof window !== 'undefined' && 'Notification' in window;
 const MAX_TIMER_MS = 2 ** 31 - 1;
 const TEST_DELAY_MS = 3000;
 const timers = new Set<number>();
+/** When each waiting notification is due, and when one was last shown: for the status screen. */
+let waiting: number[] = [];
+let lastShown: Date | null = null;
 
 function currentPermission(): NotificationPermissionState {
   if (!supported) return 'unsupported';
@@ -19,6 +22,7 @@ function currentPermission(): NotificationPermissionState {
 
 async function show(item: ScheduledNotification, options: ScheduleOptions): Promise<void> {
   if (currentPermission() !== 'granted') return;
+  lastShown = new Date();
   // The adhan is played by the page itself; browsers offer no custom notification sounds.
   if (options.sound === 'adhan') void adhanPlayer.play(item.label);
 
@@ -71,12 +75,14 @@ export const webNotifications: NotificationBackend = {
   replaceSchedule(items, options) {
     timers.forEach((timer) => window.clearTimeout(timer));
     timers.clear();
+    waiting = [];
     if (items.length > 0 && options.sound === 'adhan') prepareAdhan();
 
     const now = Date.now();
     for (const item of items) {
       const delay = item.at.getTime() - now;
       if (delay <= 0 || delay > MAX_TIMER_MS) continue;
+      waiting.push(item.at.getTime());
       const timer = window.setTimeout(() => {
         timers.delete(timer);
         void show(item, options);
@@ -90,5 +96,17 @@ export const webNotifications: NotificationBackend = {
     if (options.sound === 'adhan') prepareAdhan();
     window.setTimeout(() => void show({ ...item, id: 0, at: new Date() }, options), TEST_DELAY_MS);
     return Promise.resolve();
+  },
+
+  status() {
+    const now = Date.now();
+    const due = waiting.filter((at) => at > now);
+    return Promise.resolve({
+      platform: 'web' as const,
+      permission: currentPermission(),
+      pending: due.length,
+      next: due.length > 0 ? new Date(Math.min(...due)) : null,
+      lastShown,
+    });
   },
 };

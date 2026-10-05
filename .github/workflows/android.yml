@@ -50,20 +50,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Assemble the debug APK
+      # The release build is assembled too (unsigned), so that a problem that
+      # only shows there is caught here and not when a version is tagged.
+      - name: Assemble the debug APK and check the release build
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug assembleRelease --no-daemon
 
-      # Prayer notifications depend on these. They come from two manifests that
-      # are merged at build time, so check what the finished APK really declares.
+      # Prayer notifications and background recitation depend on these, so
+      # check what the finished APK really declares.
       - name: Check the permissions the APK declares
         run: |
           aapt2="$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -n 1)"
           permissions="$("$aapt2" dump permissions android/app/build/outputs/apk/debug/app-debug.apk)"
           echo "$permissions"
-          for name in INTERNET POST_NOTIFICATIONS USE_EXACT_ALARM RECEIVE_BOOT_COMPLETED; do
+          for name in INTERNET POST_NOTIFICATIONS USE_EXACT_ALARM RECEIVE_BOOT_COMPLETED FOREGROUND_SERVICE_MEDIA_PLAYBACK; do
             if ! echo "$permissions" | grep -q "android.permission.$name"; then
               echo "::error::The APK does not declare android.permission.$name"
               exit 1
@@ -128,4 +130,10 @@ jobs:
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP"/al-muslim-*.apk --title "Al-Muslim $GITHUB_REF_NAME" --generate-notes
+        run: |
+          notes="release-notes/$GITHUB_REF_NAME.md"
+          if [ -f "$notes" ]; then
+            gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP"/al-muslim-*.apk --title "Al-Muslim $GITHUB_REF_NAME" --notes-file "$notes"
+          else
+            gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP"/al-muslim-*.apk --title "Al-Muslim $GITHUB_REF_NAME" --generate-notes
+          fi

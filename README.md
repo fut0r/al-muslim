@@ -26,15 +26,18 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
   as the later Isha of the Umm al-Qura calendar in Ramadan. You can choose your own instead.
   High-latitude rules, time zones and daylight saving time are handled as well.
 - **Adhan notifications** at the five prayers, scheduled locally and per prayer, with the adhan by
-  Mishary Rashid Alafasy or the device's ordinary notification sound, and a test notification to
-  confirm that they arrive.
+  Mishary Rashid Alafasy or the device's ordinary notification sound. A test notification confirms
+  that they arrive, and a status screen shows what the system has scheduled and anything standing in
+  the way (a refused permission, a silenced category, battery restrictions).
 - **Home** with the next prayer, a live countdown, today's times and both dates.
 - **Quran**: all 114 surahs in Uthmani script, full-text search that understands everyday Arabic
   spelling, bookmarks, reading position, go-to-ayah and adjustable text size. Reading progress
   counts the ayahs you have actually read, surah by surah, not how far into the Quran you are.
 - **Recitations**: listen with the text following along ayah by ayah, and start from any ayah, with
   Abdul Basit Abdus-Samad, Mahmoud Khalil Al-Husary, Muhammad Siddiq Al-Minshawi, Abdur-Rahman
-  As-Sudais, Maher Al-Muaiqly or Mishary Rashid Alafasy.
+  As-Sudais, Maher Al-Muaiqly, Saad Al-Ghamdi or Mishary Rashid Alafasy. A recitation keeps playing
+  when you leave the app or lock the screen, with the surah, ayah and reciter in the system's media
+  controls, like a music player.
 - **Adhkar** for the morning, evening, sleep, after prayer and general remembrance, each with its
   source, a counter, progress that is saved for the day, and optional haptic feedback.
 - **Qiblah** compass using the device sensors, a great-circle bearing and magnetic declination. If
@@ -93,8 +96,14 @@ npm run dev
 ### Android
 
 The Android project in `android/` wraps the web build with [Capacitor](https://capacitorjs.com) and
-adds what the web cannot do: notifications and the adhan with the app closed, and home screen
-widgets (`android/app/src/main/java/.../widgets`).
+adds, in a few small Java classes of its own (`android/app/src/main/java/...`), what the web cannot
+do:
+
+- `notifications`: prayer notifications and the adhan with the app closed. The app sets the alarms
+  and shows the notifications itself, with no notification library in between.
+- `media`: a media playback service that keeps a recitation playing in the background and shows
+  the media notification and lock screen controls.
+- `widgets`: the home screen widgets.
 
 You do not need Android Studio to get an APK: the **Android** workflow builds one on every push and
 attaches it to the run as the `al-muslim-debug-apk` artifact. Each run signs its debug APK with a
@@ -116,11 +125,12 @@ or `cd android && ./gradlew assembleDebug` after the sync.
 
 #### Releases
 
-Pushing a version tag publishes a GitHub release with the APK:
+Pushing a version tag publishes a GitHub release with the APK. If `release-notes/<tag>.md` exists
+it becomes the text of the release; otherwise GitHub generates the notes from the commits.
 
 ```bash
-git tag v2.1.0
-git push origin v2.1.0
+git tag v2.0.1
+git push origin v2.0.1
 ```
 
 Android only installs an update over an app signed with the same key. To sign releases with your

@@ -186,18 +186,36 @@ export default function OnboardingPage() {
               <Alert severity="success" variant="outlined" icon={<CheckCircleOutlined />}>
                 {t('onboarding.notificationsOn')}
               </Alert>
-            ) : notification.permission === 'denied' ? (
-              <Alert severity="warning" variant="outlined" role="alert">
-                {t('settings.notificationsDenied')}
-              </Alert>
-            ) : notification.permission === 'unsupported' ? (
+            ) : notification.permission === 'unsupported' && !notifications.deliversWhenClosed ? (
               <Alert severity="info" variant="outlined">
                 {t('settings.notificationsUnsupported')}
               </Alert>
             ) : (
-              <Button variant="outlined" size="large" startIcon={<NotificationsNoneOutlined />} onClick={() => void notification.enable()}>
-                {t('onboarding.enableNotifications')}
-              </Button>
+              <>
+                {notification.permission === 'denied' && (
+                  <Alert severity="warning" variant="outlined" role="alert">
+                    {t(notifications.openSettings ? 'settings.notificationsDeniedNative' : 'settings.notificationsDenied')}
+                  </Alert>
+                )}
+                {notification.permission === 'unsupported' && (
+                  <Alert severity="warning" variant="outlined" role="alert">
+                    {t('settings.notificationsUnavailable')}
+                  </Alert>
+                )}
+                {/* In the browser a refusal can only be undone in the browser's own settings. */}
+                {(notification.permission !== 'denied' || notifications.openSettings) && (
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<NotificationsNoneOutlined />}
+                    onClick={() => void notification.enable()}
+                  >
+                    {notification.permission === 'denied'
+                      ? t('onboarding.openNotificationSettings')
+                      : t('onboarding.enableNotifications')}
+                  </Button>
+                )}
+              </>
             )}
             {!notifications.deliversWhenClosed && notification.permission !== 'unsupported' && (
               <Typography variant="body2" color="textSecondary">

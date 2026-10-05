@@ -9,11 +9,11 @@ import { buildWidgetPayload, WIDGET_HORIZON_DAYS } from './widgets';
 
 const surahs = surahsJson as SurahInfo[];
 describe('recitation', () => {
-  it('offers six reciters with names in both languages', () => {
-    expect(RECITERS).toHaveLength(6);
-    expect(new Set(RECITERS.map((reciter) => reciter.id)).size).toBe(6);
-    expect(new Set(RECITERS.map((reciter) => reciter.folder)).size).toBe(6);
-    expect(RECITERS.map((reciter) => reciter.id)).toContain('maher');
+  it('offers seven reciters with names in both languages', () => {
+    expect(RECITERS).toHaveLength(7);
+    expect(new Set(RECITERS.map((reciter) => reciter.id)).size).toBe(7);
+    expect(new Set(RECITERS.map((reciter) => reciter.folder)).size).toBe(7);
+    expect(RECITERS.map((reciter) => reciter.id)).toEqual(expect.arrayContaining(['maher', 'ghamdi']));
     for (const reciter of RECITERS) {
       expect(reciter.name.ar).not.toBe('');
       expect(reciter.name.en).not.toBe('');

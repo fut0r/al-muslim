@@ -11,6 +11,7 @@ import { useAdhanState } from '@/components/AdhanBanner';
 import { AppHeader } from '@/components/AppHeader';
 import { useCalculationSettings } from '@/components/CalculationSettings';
 import { LocationDialog, locationLabel } from '@/components/LocationDialog';
+import { formatMoment, NotificationStatusDialog } from '@/components/NotificationStatusDialog';
 import { PageContent } from '@/components/Page';
 import { ChoiceDialog, SegmentedControl, SettingItem, SettingsSection, SwitchItem } from '@/components/settings';
 import { getReciter, RECITERS } from '@/data/reciters';
@@ -59,9 +60,8 @@ export default function SettingsPage() {
   const adhan = useAdhanState();
   const ayahsRead = totalAyahsRead(useQuranState());
   const resetTitleId = useId();
-  const [dialog, setDialog] = useState<'location' | 'reciter' | 'resetReading' | null>(null);
+  const [dialog, setDialog] = useState<'location' | 'reciter' | 'resetReading' | 'notificationStatus' | null>(null);
   const [permission, setPermission] = useState<LocationPermission>('unknown');
-  const [exactAlarms, setExactAlarms] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   usePageTitle(t('settings.title'), t('app.name'));
@@ -77,20 +77,11 @@ export default function SettingsPage() {
   }, [location]);
 
   const notificationsOn = settings.notifications.enabled && notification.permission === 'granted';
-  useEffect(() => {
-    if (!notificationsOn || !notifications.exactAlarmsAllowed) return;
-    let cancelled = false;
-    void notifications.exactAlarmsAllowed().then((allowed) => {
-      if (!cancelled) setExactAlarms(allowed);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [notificationsOn]);
+  const status = notification.status;
 
   const notificationHint =
     notification.permission === 'unsupported'
-      ? t('settings.notificationsUnsupported')
+      ? t(notifications.deliversWhenClosed ? 'settings.notificationsUnavailable' : 'settings.notificationsUnsupported')
       : notification.permission === 'denied'
         ? t(notifications.openSettings ? 'settings.notificationsDeniedNative' : 'settings.notificationsDenied')
         : !location
@@ -98,6 +89,20 @@ export default function SettingsPage() {
           : notifications.deliversWhenClosed
             ? t('settings.notificationsNativeHint')
             : t('settings.notificationsWebHint');
+
+  // One line saying where things stand; the dialog has the rest.
+  const statusSummary = !status
+    ? undefined
+    : !notificationsOn
+      ? t('settings.statusOff')
+      : status.channelBlocked
+        ? t('settings.statusMuted')
+        : status.pending > 0 && status.next
+          ? t('settings.statusScheduled', {
+              count: status.pending,
+              time: formatMoment(i18n, status.next, settings.hour12),
+            })
+          : t('settings.statusNothingScheduled');
 
   const refreshLocation = async () => {
     setRefreshing(true);
@@ -112,6 +117,11 @@ export default function SettingsPage() {
     } else if (!(await adhanPlayer.play())) {
       setMessage(t('adhan.failed'));
     }
+  };
+
+  const turnOnNotifications = async () => {
+    const state = await notification.enable();
+    if (state === 'unsupported') setMessage(t('settings.notificationsUnavailable'));
   };
 
   const sendTestNotification = async () => {
@@ -222,8 +232,11 @@ export default function SettingsPage() {
             label={t('settings.prayerNotifications')}
             description={notificationHint}
             checked={notificationsOn}
-            disabled={notification.permission === 'unsupported' || notification.permission === null}
-            onChange={(checked) => (checked ? void notification.enable() : notification.disable())}
+            disabled={
+              notification.permission === null ||
+              (notification.permission === 'unsupported' && !notifications.deliversWhenClosed)
+            }
+            onChange={(checked) => (checked ? void turnOnNotifications() : notification.disable())}
           />
           {notificationsOn &&
             OBLIGATORY_PRAYER_IDS.map((id) => (
@@ -271,11 +284,35 @@ export default function SettingsPage() {
               onClick={() => void sendTestNotification()}
             />
           )}
-          {notificationsOn && !exactAlarms && notifications.openExactAlarmSettings && (
+          {notificationsOn && status?.channelBlocked && notifications.openSettings && (
+            <SettingItem
+              label={t('settings.categoryMuted')}
+              description={t('settings.categoryMutedHint')}
+              onClick={() => void notifications.openSettings?.()}
+            />
+          )}
+          {notificationsOn && status?.exactTiming === false && notifications.openExactAlarmSettings && (
             <SettingItem
               label={t('settings.exactAlarms')}
               description={t('settings.exactAlarmsHint')}
-              onClick={() => void notifications.openExactAlarmSettings?.().then(setExactAlarms)}
+              onClick={() => void notifications.openExactAlarmSettings?.()}
+            />
+          )}
+          {notificationsOn && status?.batteryRestricted && notifications.openBatterySettings && (
+            <SettingItem
+              label={t('settings.allowBackground')}
+              description={t('settings.allowBackgroundHint')}
+              onClick={() => void notifications.openBatterySettings?.()}
+            />
+          )}
+          {status && (notifications.deliversWhenClosed || status.permission !== 'unsupported') && (
+            <SettingItem
+              label={t('settings.notificationStatus')}
+              description={statusSummary}
+              onClick={() => {
+                void notification.refresh();
+                setDialog('notificationStatus');
+              }}
             />
           )}
         </SettingsSection>
@@ -367,6 +404,15 @@ export default function SettingsPage() {
         }))}
       />
       <LocationDialog open={dialog === 'location'} onClose={() => setDialog(null)} />
+      <NotificationStatusDialog
+        open={dialog === 'notificationStatus'}
+        status={status}
+        enabledInApp={settings.notifications.enabled}
+        hour12={settings.hour12}
+        onRefresh={() => void notification.refresh()}
+        onCopied={() => setMessage(t('common.copied'))}
+        onClose={() => setDialog(null)}
+      />
       <Dialog open={dialog === 'resetReading'} onClose={() => setDialog(null)} fullWidth maxWidth="xs" aria-labelledby={resetTitleId}>
         <Box sx={{ p: 3 }}>
           <Typography id={resetTitleId} variant="h2" component="h2">

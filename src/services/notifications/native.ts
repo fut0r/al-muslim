@@ -1,57 +1,72 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
-import type { NotificationBackend, NotificationOptions, NotificationPermissionState, ScheduledNotification } from './types';
+import { registerPlugin } from '@capacitor/core';
+import type {
+  NotificationBackend,
+  NotificationOptions,
+  NotificationPermissionState,
+  NotificationStatus,
+  ScheduledNotification,
+} from './types';
 
 // Android fixes a channel's sound when it is first created, so each sound has
 // its own channel. Bump the suffix if the adhan recording is ever replaced.
 const DEFAULT_CHANNEL = 'prayer-times';
 const ADHAN_CHANNEL = 'prayer-adhan-v1';
-/** Bundled in android/app/src/main/res/raw (copied there by scripts/sync-android-assets.mjs). */
-const ADHAN_SOUND = 'adhan.mp3';
-/** Outside the range used for prayer times, which are numbered from the date. */
-const TEST_NOTIFICATION_ID = 1;
-const TEST_DELAY_MS = 5000;
 
-interface SystemSettingsPlugin {
-  openNotifications(): Promise<void>;
+interface Channel {
+  id: string;
+  name: string;
+  description: string;
+  /** Plays the adhan bundled in the app (res/raw/adhan) instead of the device's sound. */
+  adhan: boolean;
 }
 
-/** android/app/src/main/java/.../SystemSettingsPlugin.java */
-const SystemSettings = registerPlugin<SystemSettingsPlugin>('SystemSettings');
-
-async function plugin() {
-  return (await import('@capacitor/local-notifications')).LocalNotifications;
+/** As reported by android/.../notifications/PrayerNotificationsPlugin.java. */
+interface NativeState {
+  permission: 'granted' | 'denied' | 'prompt';
+  enabled: boolean;
+  exact: boolean;
+  sdk: number;
+  release: string;
+  device: string;
+  pending: number;
+  next?: number;
+  lastShown?: number;
+  error?: string;
+  channelBlocked: boolean;
+  batteryRestricted: boolean;
 }
 
-function toState(display: string): NotificationPermissionState {
-  if (display === 'granted' || display === 'denied') return display;
-  return 'prompt';
+interface PrayerNotificationsPlugin {
+  status(): Promise<NativeState>;
+  requestPermission(): Promise<NativeState>;
+  schedule(options: {
+    channel: Channel;
+    items: { id: number; at: number; title: string; body: string }[];
+  }): Promise<{ scheduled: number; exact: boolean }>;
+  cancel(): Promise<void>;
+  test(options: { channel: Channel; title: string; body: string }): Promise<void>;
+  openSettings(): Promise<void>;
+  openExactAlarmSettings(): Promise<void>;
+  openBatterySettings(): Promise<void>;
 }
 
-async function exactAlarmsAllowed(): Promise<boolean> {
-  try {
-    return (await (await plugin()).checkExactNotificationSetting()).exact_alarm === 'granted';
-  } catch {
-    return true; // Not applicable on this platform.
-  }
-}
+/**
+ * The app's own scheduler: alarms set with the system and notifications shown
+ * by the app, with no third-party code in between.
+ */
+const PrayerNotifications = registerPlugin<PrayerNotificationsPlugin>('PrayerNotifications');
 
-/** Makes sure the channel for the chosen sound exists and returns its id. */
-async function prepareChannel(options: NotificationOptions): Promise<string> {
+function channelFor(options: NotificationOptions): Channel {
   const adhan = options.sound === 'adhan';
-  const channelId = adhan ? ADHAN_CHANNEL : DEFAULT_CHANNEL;
   const names = adhan ? options.adhanChannel : options.channel;
-  // No-op on platforms without channels; safe to repeat on Android.
-  await (await plugin())
-    .createChannel({
-      id: channelId,
-      name: names.name,
-      description: names.description,
-      importance: 4,
-      visibility: 1,
-      ...(adhan ? { sound: ADHAN_SOUND } : {}),
-    })
-    .catch(() => undefined);
-  return channelId;
+  return { id: adhan ? ADHAN_CHANNEL : DEFAULT_CHANNEL, name: names.name, description: names.description, adhan };
+}
+
+/** The last failure talking to the system, kept for the status screen. */
+let lastError: string | null = null;
+
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 /**
@@ -79,101 +94,91 @@ export const nativeNotifications: NotificationBackend = {
   horizonDays: 12,
   limit: 60,
 
-  async permission() {
+  async permission(): Promise<NotificationPermissionState> {
     try {
-      return toState((await (await plugin()).checkPermissions()).display);
-    } catch {
+      const state = await PrayerNotifications.status();
+      lastError = null;
+      return state.permission;
+    } catch (error) {
+      lastError = describe(error);
       return 'unsupported';
     }
   },
 
-  async requestPermission() {
+  async requestPermission(): Promise<NotificationPermissionState> {
     try {
-      return toState((await (await plugin()).requestPermissions()).display);
-    } catch {
+      const state = await PrayerNotifications.requestPermission();
+      lastError = null;
+      return state.permission;
+    } catch (error) {
+      lastError = describe(error);
       return 'unsupported';
     }
   },
 
   async replaceSchedule(items, options) {
-    const notifications = await plugin();
-
-    if (items.length === 0) {
-      scheduled = null;
-      const pending = await notifications.getPending();
-      if (pending.notifications.length > 0) {
-        await notifications.cancel({ notifications: pending.notifications.map(({ id }) => ({ id })) });
+    try {
+      if (items.length === 0) {
+        scheduled = null;
+        await PrayerNotifications.cancel();
+        return;
       }
-      return;
+
+      const channel = channelFor(options);
+      const fingerprints = items.map(fingerprint);
+      if (alreadyScheduled(channel.id, fingerprints)) return;
+
+      scheduled = null;
+      await PrayerNotifications.schedule({
+        channel,
+        items: items.map((item) => ({ id: item.id, at: item.at.getTime(), title: item.title, body: item.body })),
+      });
+      scheduled = { key: channel.id, items: fingerprints };
+      lastError = null;
+    } catch (error) {
+      lastError = describe(error);
+      throw error;
     }
-
-    // The plugin opens the system "Alarms & reminders" screen by itself whenever
-    // a notification asks for exact timing that is not allowed. Scheduling runs
-    // in the background, so it must never do that: ask for exact timing only
-    // when it is already allowed. Settings offers the switch otherwise.
-    const exact = await exactAlarmsAllowed();
-    const adhan = options.sound === 'adhan';
-    const key = `${adhan ? ADHAN_CHANNEL : DEFAULT_CHANNEL}|${exact ? 'exact' : 'inexact'}`;
-    const fingerprints = items.map(fingerprint);
-    if (alreadyScheduled(key, fingerprints)) return;
-
-    scheduled = null;
-    const pending = await notifications.getPending();
-    if (pending.notifications.length > 0) {
-      await notifications.cancel({ notifications: pending.notifications.map(({ id }) => ({ id })) });
-    }
-
-    const channelId = await prepareChannel(options);
-    await notifications.schedule({
-      notifications: items.map((item) => ({
-        id: item.id,
-        title: item.title,
-        body: item.body,
-        channelId,
-        // Read on Android 7 and earlier, which have no channels.
-        ...(adhan ? { sound: ADHAN_SOUND } : {}),
-        isExactNotification: exact,
-        schedule: { at: item.at, allowWhileIdle: true },
-      })),
-    });
-    scheduled = { key, items: fingerprints };
   },
 
   async sendTest(item, options) {
-    const notifications = await plugin();
-    const channelId = await prepareChannel(options);
-    await notifications.schedule({
-      notifications: [
-        {
-          id: TEST_NOTIFICATION_ID,
-          title: item.title,
-          body: item.body,
-          channelId,
-          ...(options.sound === 'adhan' ? { sound: ADHAN_SOUND } : {}),
-          isExactNotification: await exactAlarmsAllowed(),
-          schedule: { at: new Date(Date.now() + TEST_DELAY_MS), allowWhileIdle: true },
-        },
-      ],
-    });
+    await PrayerNotifications.test({ channel: channelFor(options), title: item.title, body: item.body });
   },
 
-  exactAlarmsAllowed,
-
-  async openExactAlarmSettings() {
+  async status(): Promise<NotificationStatus> {
     try {
-      return (await (await plugin()).changeExactNotificationSetting()).exact_alarm === 'granted';
-    } catch {
-      return false;
+      const state = await PrayerNotifications.status();
+      return {
+        platform: 'android',
+        permission: state.permission,
+        pending: state.pending,
+        next: state.next ? new Date(state.next) : null,
+        lastShown: state.lastShown ? new Date(state.lastShown) : null,
+        exactTiming: state.exact,
+        channelBlocked: state.channelBlocked,
+        batteryRestricted: state.batteryRestricted,
+        device: `${state.device} · Android ${state.release} (API ${state.sdk})`,
+        error: state.error ?? lastError ?? undefined,
+      };
+    } catch (error) {
+      return { platform: 'android', permission: 'unsupported', pending: 0, next: null, lastShown: null, error: describe(error) };
     }
   },
 
+  async openExactAlarmSettings() {
+    await PrayerNotifications.openExactAlarmSettings().catch(() => undefined);
+  },
+
   async openSettings() {
-    if (Capacitor.getPlatform() !== 'android') return false;
     try {
-      await SystemSettings.openNotifications();
+      await PrayerNotifications.openSettings();
       return true;
     } catch {
       return false;
     }
+  },
+
+  async openBatterySettings() {
+    await PrayerNotifications.openBatterySettings().catch(() => undefined);
   },
 };
