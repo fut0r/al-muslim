@@ -13,7 +13,8 @@ fixes and code are all welcome.
 
 1. **Privacy first.** No analytics, trackers, ads, accounts or third-party SDKs. No network
    requests for anything that can be done on the device.
-2. **Offline first.** Every feature must work without a connection.
+2. **Offline first.** Every feature must work without a connection. The one exception is streaming
+   recitations, which happens only when the user presses play and is stated plainly in the app.
 3. **Simple.** Prefer removing to adding. No dependency for something MUI or a few lines can do.
 4. **Accessible.** Keyboard and screen-reader support, 44px touch targets, sufficient contrast,
    respect for reduced motion and large text. Never convey state by colour alone.
@@ -41,6 +42,8 @@ npm run check    # type-check, lint and unit tests — run this before opening a
   keys (a unit test checks this). Never apply letter-spacing to Arabic text.
 - Use relative units and the helpers in `src/theme/tokens.ts` for spacing and safe areas. No fixed
   screen sizes.
+- The landing page (`site/`) and the Android widgets take their colours from the same tokens. If
+  you change a colour, update `android/app/src/main/res/values*/colors.xml` to match.
 - Every failure the user can hit (denied permission, missing sensor, no data) needs a clear state
   with a way forward. Never show technical errors.
 - Add or update unit tests for changes in `src/domain` and `src/stores`.

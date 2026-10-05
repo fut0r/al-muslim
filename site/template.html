@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="{{lang}}" dir="{{dir}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- A static page: no scripts, nothing loaded from other sites. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="{{themeLight}}" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="{{themeDark}}" media="(prefers-color-scheme: dark)" />
+    <title>{{t.meta.title}}</title>
+    <meta name="description" content="{{t.meta.description}}" />
+    <meta property="og:title" content="{{t.meta.title}}" />
+    <meta property="og:description" content="{{t.meta.description}}" />
+    <meta property="og:type" content="website" />
+    <link rel="alternate" hreflang="en" href="{{root}}" />
+    <link rel="alternate" hreflang="ar" href="{{root}}ar/" />
+    <link rel="icon" href="{{root}}favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="{{root}}assets/site.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">{{t.nav.skip}}</a>
+
+    <header class="nav">
+      <div class="wrap nav__row">
+        <a class="brand" href="{{root}}{{self}}" aria-label="{{t.brand}}">
+          {{logo}}
+          <span>{{t.brand}}</span>
+        </a>
+        <nav class="nav__links" aria-label="{{t.nav.label}}">
+          <a href="#features">{{t.nav.features}}</a>
+          <a href="#privacy">{{t.nav.privacy}}</a>
+          <a href="#get">{{t.nav.get}}</a>
+        </nav>
+        <a class="nav__lang" href="{{root}}{{other}}" lang="{{otherLang}}" hreflang="{{otherLang}}">
+          {{icon.TranslateOutlined}}<span>{{t.nav.otherLanguage}}</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="wrap hero__grid">
+          <div class="hero__text">
+            <p class="overline">{{t.hero.eyebrow}}</p>
+            <h1 class="display">{{t.hero.title}}</h1>
+            <p class="lead">{{t.hero.body}}</p>
+            <div class="actions">
+              <a class="button button--primary" href="{{root}}app/">{{icon.LanguageOutlined}}{{t.cta.web}}</a>
+              <a class="button" href="{{releases}}" rel="noopener">{{icon.AndroidOutlined}}{{t.cta.android}}</a>
+            </div>
+            <p class="fineprint">{{t.hero.note}}</p>
+          </div>
+
+          <!-- A static preview of the app's home screen, drawn with the app's own colours and type. -->
+          <div class="phone" aria-hidden="true">
+            <div class="phone__screen">
+              <div class="app-bar">
+                {{logo}}
+                <span class="app-bar__name">{{t.brand}}</span>
+                <span class="app-bar__icon">{{icon.SettingsOutlined}}</span>
+              </div>
+              <div class="app-dates">
+                <div>
+                  <p class="app-hijri">{{t.preview.hijri}}</p>
+                  <p class="app-gregorian">{{t.preview.gregorian}}</p>
+                </div>
+                <p class="app-place">{{icon.PlaceOutlined}}{{t.preview.city}}</p>
+              </div>
+              <p class="overline">{{t.preview.next}}</p>
+              <div class="app-next">
+                <span class="app-next__name">{{t.preview.asr}}</span>
+                <span class="app-next__time">{{t.preview.asrTime}}</span>
+              </div>
+              <p class="app-countdown" dir="ltr">02:14:36</p>
+              <div class="app-progress"><span></span></div>
+              <p class="app-now">{{t.preview.now}}</p>
+              <ul class="app-times">
+                <li class="is-past"><span>{{t.preview.fajr}}</span><span>{{t.preview.fajrTime}}</span></li>
+                <li class="is-past"><span>{{t.preview.sunrise}}</span><span>{{t.preview.sunriseTime}}</span></li>
+                <li><span>{{t.preview.dhuhr}} <em>{{t.preview.nowTag}}</em></span><span>{{t.preview.dhuhrTime}}</span></li>
+                <li class="is-next"><span>{{t.preview.asr}} <em>{{t.preview.nextTag}}</em></span><span>{{t.preview.asrTime}}</span></li>
+                <li><span>{{t.preview.maghrib}}</span><span>{{t.preview.maghribTime}}</span></li>
+                <li><span>{{t.preview.isha}}</span><span>{{t.preview.ishaTime}}</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="wrap">
+          <p class="overline">{{t.features.eyebrow}}</p>
+          <h2>{{t.features.title}}</h2>
+          <ul class="features">
+            <li>{{icon.MosqueOutlined}}<h3>{{t.features.prayer.title}}</h3><p>{{t.features.prayer.body}}</p></li>
+            <li>{{icon.NotificationsActiveOutlined}}<h3>{{t.features.adhan.title}}</h3><p>{{t.features.adhan.body}}</p></li>
+            <li>{{icon.MenuBookOutlined}}<h3>{{t.features.quran.title}}</h3><p>{{t.features.quran.body}}</p></li>
+            <li>{{icon.HeadphonesOutlined}}<h3>{{t.features.audio.title}}</h3><p>{{t.features.audio.body}}</p></li>
+            <li>{{tasbih}}<h3>{{t.features.adhkar.title}}</h3><p>{{t.features.adhkar.body}}</p></li>
+            <li>{{icon.ExploreOutlined}}<h3>{{t.features.qiblah.title}}</h3><p>{{t.features.qiblah.body}}</p></li>
+            <li>{{icon.CalendarMonthOutlined}}<h3>{{t.features.calendar.title}}</h3><p>{{t.features.calendar.body}}</p></li>
+            <li>{{icon.WidgetsOutlined}}<h3>{{t.features.widgets.title}}</h3><p>{{t.features.widgets.body}}</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="privacy" class="section section--tinted">
+        <div class="wrap split">
+          <div>
+            <p class="overline">{{t.privacy.eyebrow}}</p>
+            <h2>{{t.privacy.title}}</h2>
+            <p class="lead">{{t.privacy.body}}</p>
+          </div>
+          <ul class="checks">
+            <li>{{icon.PersonOffOutlined}}<span>{{t.privacy.accounts}}</span></li>
+            <li>{{icon.VisibilityOffOutlined}}<span>{{t.privacy.tracking}}</span></li>
+            <li>{{icon.LockOutlined}}<span>{{t.privacy.location}}</span></li>
+            <li>{{icon.WifiOffOutlined}}<span>{{t.privacy.offline}}</span></li>
+            <li>{{icon.HeadphonesOutlined}}<span>{{t.privacy.network}}</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <p class="overline">{{t.design.eyebrow}}</p>
+          <h2>{{t.design.title}}</h2>
+          <ul class="facts">
+            <li><strong>{{t.design.languages.title}}</strong><span>{{t.design.languages.body}}</span></li>
+            <li><strong>{{t.design.themes.title}}</strong><span>{{t.design.themes.body}}</span></li>
+            <li><strong>{{t.design.access.title}}</strong><span>{{t.design.access.body}}</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="get" class="section section--tinted">
+        <div class="wrap">
+          <p class="overline">{{t.get.eyebrow}}</p>
+          <h2>{{t.get.title}}</h2>
+          <div class="cards">
+            <article class="card">
+              {{icon.LanguageOutlined}}
+              <h3>{{t.get.web.title}}</h3>
+              <p>{{t.get.web.body}}</p>
+              <a class="button button--primary" href="{{root}}app/">{{t.cta.web}}</a>
+            </article>
+            <article class="card">
+              {{icon.AndroidOutlined}}
+              <h3>{{t.get.android.title}}</h3>
+              <p>{{t.get.android.body}}</p>
+              <a class="button" href="{{releases}}" rel="noopener">{{t.cta.android}}</a>
+            </article>
+            <article class="card">
+              {{icon.CodeOutlined}}
+              <h3>{{t.get.source.title}}</h3>
+              <p>{{t.get.source.body}}</p>
+              <a class="button" href="{{repository}}" rel="noopener">{{t.cta.source}}</a>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__row">
+        <p>{{t.footer.license}}</p>
+        <p>{{t.footer.developer}}</p>
+      </div>
+    </footer>
+  </body>
+</html>

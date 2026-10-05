@@ -5,7 +5,9 @@ import Bookmark from '@mui/icons-material/Bookmark';
 import BookmarkBorderOutlined from '@mui/icons-material/BookmarkBorderOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
 import FormatSizeOutlined from '@mui/icons-material/FormatSizeOutlined';
+import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
 import PinOutlined from '@mui/icons-material/PinOutlined';
+import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
 import RemoveOutlined from '@mui/icons-material/RemoveOutlined';
 import Box from '@mui/material/Box';
 import { keyframes } from '@mui/material/styles';
@@ -28,9 +30,13 @@ import { AppHeader } from '@/components/AppHeader';
 import { Directional } from '@/components/icons';
 import { PageContent } from '@/components/Page';
 import { ArabicText, ayahMarker, surahDisplayName, surahMeta, useSurahText } from '@/components/quran';
+import { RECITATION_BAR_SPACE, RecitationBar } from '@/components/RecitationBar';
+import { ChoiceDialog } from '@/components/settings';
 import { ErrorState, LoadingState } from '@/components/states';
+import { getReciter, RECITERS } from '@/data/reciters';
 import { showsBasmalah } from '@/domain/quran/types';
 import { useKeepAwake, usePageTitle } from '@/hooks/useDeviceFeatures';
+import { useRecitation } from '@/hooks/useRecitation';
 import { useI18n } from '@/i18n';
 import { getSurah } from '@/services/quranRepository';
 import { isBookmarked, setLastRead, toggleBookmark, useQuranState } from '@/stores/quran';
@@ -51,12 +57,14 @@ interface AyahProps {
   text: string;
   bookmarked: boolean;
   highlighted: boolean;
+  /** True while this ayah is being recited. */
+  playing: boolean;
   bookmarkedLabel: string;
   onSelect(number: number, element: HTMLElement): void;
 }
 
 /** One ayah inside the flowing text. Tapping it opens the ayah actions. */
-const Ayah = memo(function Ayah({ number, text, bookmarked, highlighted, bookmarkedLabel, onSelect }: AyahProps) {
+const Ayah = memo(function Ayah({ number, text, bookmarked, highlighted, playing, bookmarkedLabel, onSelect }: AyahProps) {
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -71,6 +79,7 @@ const Ayah = memo(function Ayah({ number, text, bookmarked, highlighted, bookmar
       role="button"
       tabIndex={0}
       aria-haspopup="menu"
+      aria-current={playing ? 'true' : undefined}
       onClick={(event) => onSelect(number, event.currentTarget)}
       onKeyDown={onKeyDown}
       sx={{
@@ -80,7 +89,8 @@ const Ayah = memo(function Ayah({ number, text, bookmarked, highlighted, bookmar
         boxDecorationBreak: 'clone',
         WebkitBoxDecorationBreak: 'clone',
         // The ayah that was jumped to is tinted briefly so the eye can find it.
-        animation: highlighted ? `${fadeHighlight} 2600ms ease-out 1` : 'none',
+        animation: highlighted && !playing ? `${fadeHighlight} 2600ms ease-out 1` : 'none',
+        bgcolor: playing ? 'action.selected' : 'transparent',
         '&:hover': { bgcolor: 'action.hover' },
       }}
     >
@@ -154,7 +164,10 @@ function Reader({ surahId }: { surahId: number }) {
   const i18n = useI18n();
   const { t } = i18n;
   const surah = getSurah(surahId)!;
-  const { quranFontScale } = useSettings();
+  const { quranFontScale, reciter: reciterId } = useSettings();
+  const recitation = useRecitation(surah, reciterId);
+  const reciter = getReciter(reciterId);
+  const reciterName = i18n.language === 'ar' ? reciter.name.ar : reciter.name.en;
   const quran = useQuranState();
   const [searchParams, setSearchParams] = useSearchParams();
   const [attempt, setAttempt] = useState(0);
@@ -171,6 +184,7 @@ function Reader({ surahId }: { surahId: number }) {
   const [goToOpen, setGoToOpen] = useState(false);
   const [sizeAnchor, setSizeAnchor] = useState<HTMLElement | null>(null);
   const [copied, setCopied] = useState(false);
+  const [reciterOpen, setReciterOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const ready = text.status === 'ready';
 
@@ -226,6 +240,17 @@ function Reader({ surahId }: { surahId: number }) {
     return () => window.clearTimeout(timer);
   }, [ready, surahId, currentAyah]);
 
+  // Keep the ayah being recited in view.
+  const playingAyah = recitation.ayah;
+  useEffect(() => {
+    if (playingAyah === null) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    document
+      .getElementById(`ayah-${playingAyah}`)
+      ?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+  }, [playingAyah]);
+  const listening = recitation.state.status !== 'idle';
+
   const onSelect = useCallback((ayah: number, anchor: HTMLElement) => setMenu({ ayah, anchor }), [setMenu]);
   const bookmarkedAyahs = useMemo(
     () => new Set(quran.bookmarks.filter((b) => b.surah === surahId).map((b) => b.ayah)),
@@ -260,6 +285,15 @@ function Reader({ surahId }: { surahId: number }) {
         backTo="/quran"
         actions={
           <>
+            <IconButton
+              onClick={() => (listening ? recitation.stop() : recitation.playFrom(currentAyah))}
+              aria-label={listening ? t('quran.stopListening') : t('quran.listen')}
+              aria-pressed={listening}
+              color={listening ? 'primary' : 'inherit'}
+              disabled={!ready}
+            >
+              <HeadphonesOutlined />
+            </IconButton>
             <IconButton onClick={() => setGoToOpen(true)} aria-label={t('quran.goToAyah')} color="inherit">
               <PinOutlined />
             </IconButton>
@@ -314,6 +348,7 @@ function Reader({ surahId }: { surahId: number }) {
                   text={ayah}
                   bookmarked={bookmarkedAyahs.has(index + 1)}
                   highlighted={targetAyah === index + 1}
+                  playing={playingAyah === index + 1}
                   bookmarkedLabel={t('quran.bookmarked')}
                   onSelect={onSelect}
                 />
@@ -356,9 +391,12 @@ function Reader({ surahId }: { surahId: number }) {
                 </Button>
               )}
             </Box>
+            {listening && <Box aria-hidden sx={{ height: RECITATION_BAR_SPACE }} />}
           </Box>
         )}
       </PageContent>
+
+      <RecitationBar recitation={recitation} reciterName={reciterName} onChooseReciter={() => setReciterOpen(true)} />
 
       <Menu open={menu !== null} anchorEl={menu?.anchor} onClose={() => setMenu(null)}>
         <Typography variant="caption" color="textSecondary" component="p" sx={{ px: 2, pb: 0.5 }}>
@@ -372,6 +410,17 @@ function Reader({ surahId }: { surahId: number }) {
         >
           <ListItemIcon>{menuBookmarked ? <Bookmark /> : <BookmarkBorderOutlined />}</ListItemIcon>
           <ListItemText>{menuBookmarked ? t('quran.removeBookmark') : t('quran.bookmark')}</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menu) recitation.playFrom(menu.ayah);
+            setMenu(null);
+          }}
+        >
+          <ListItemIcon>
+            <PlayArrowOutlined />
+          </ListItemIcon>
+          <ListItemText>{t('quran.playFromHere')}</ListItemText>
         </MenuItem>
         {canCopy && (
           <MenuItem
@@ -415,6 +464,20 @@ function Reader({ surahId }: { surahId: number }) {
           </IconButton>
         </Box>
       </Popover>
+
+      <ChoiceDialog
+        open={reciterOpen}
+        title={t('quran.reciter')}
+        value={reciterId}
+        onChange={(value) => updateSettings({ reciter: value })}
+        onClose={() => setReciterOpen(false)}
+        note={t('quran.audioNote')}
+        options={RECITERS.map((item) => ({
+          value: item.id,
+          label: i18n.language === 'ar' ? item.name.ar : item.name.en,
+          description: i18n.language === 'ar' ? item.detail.ar : item.detail.en,
+        }))}
+      />
 
       <GoToAyahDialog
         open={goToOpen}

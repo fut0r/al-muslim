@@ -26,6 +26,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run lint && npm run test",
+    "site": "node scripts/build-site.mjs",
+    "site:preview": "vite preview --outDir dist-site --port 4174 --strictPort",
     "data:quran": "node scripts/build-quran-data.mjs",
     "data:cities": "node scripts/build-cities-data.mjs",
     "icons": "node scripts/generate-icons.mjs",

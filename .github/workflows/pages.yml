@@ -1,8 +1,12 @@
-name: Deploy web app
+name: Website
 
-# Publishes the web app (PWA) to GitHub Pages. Run it manually from the
-# Actions tab after enabling Pages with "GitHub Actions" as the source.
+# Builds the landing page with the web app under /app/ and publishes both to
+# GitHub Pages. Publishing only happens once Pages is enabled for the
+# repository (Settings → Pages → Source: GitHub Actions); until then the site
+# is still built, so mistakes are caught.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,11 +19,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
+    name: Build the site
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      pages: ${{ steps.pages.outputs.enabled }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,12 +33,38 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run check
-      - run: npx vite build
+
+      - name: Build the web app
+        run: npx vite build
+
+      - name: Build the landing page around it
+        run: npm run site
+
+      - name: Check whether GitHub Pages is enabled
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::The site was built but not published: GitHub Pages is not enabled. Enable it under Settings → Pages with the source set to GitHub Actions."
+          fi
 
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pages.outputs.enabled == 'true'
         with:
-          path: dist
+          path: dist-site
 
+  deploy:
+    name: Publish
+    needs: build
+    if: needs.build.outputs.pages == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4

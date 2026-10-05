@@ -1,0 +1,129 @@
+{
+  "brand": "Al-Muslim",
+  "meta": {
+    "title": "Al-Muslim — prayer times, Quran and adhkar, private and offline",
+    "description": "A free, open-source Islamic companion: accurate prayer times with the adhan, the full Quran with five reciters, adhkar, qiblah, Hijri calendar and Android widgets. No accounts, no ads, no tracking."
+  },
+  "nav": {
+    "skip": "Skip to content",
+    "label": "Sections",
+    "features": "Features",
+    "privacy": "Privacy",
+    "get": "Get the app",
+    "otherLanguage": "العربية"
+  },
+  "hero": {
+    "eyebrow": "Free and open source",
+    "title": "Your daily worship, in one calm app",
+    "body": "Accurate prayer times with the adhan, the full Quran with five reciters, daily adhkar, the qiblah and the Hijri calendar. It works without the internet and keeps everything on your device.",
+    "note": "No account. No ads. No tracking."
+  },
+  "cta": {
+    "web": "Open the web app",
+    "android": "Android APK",
+    "source": "View on GitHub"
+  },
+  "preview": {
+    "hijri": "24 Rabi' al-Thani 1448 AH",
+    "gregorian": "Monday, October 5, 2026",
+    "city": "Cairo",
+    "next": "Next prayer",
+    "now": "Now: Dhuhr",
+    "nowTag": "Now",
+    "nextTag": "Next",
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "fajrTime": "5:24 AM",
+    "sunriseTime": "6:50 AM",
+    "dhuhrTime": "12:44 PM",
+    "asrTime": "4:05 PM",
+    "maghribTime": "6:36 PM",
+    "ishaTime": "7:53 PM"
+  },
+  "features": {
+    "eyebrow": "What it does",
+    "title": "Everything a Muslim needs each day, and nothing more",
+    "prayer": {
+      "title": "Prayer times",
+      "body": "Calculated on your device with twelve recognised methods, Shafi'i or Hanafi Asr, and correct time zones and daylight saving."
+    },
+    "adhan": {
+      "title": "Adhan at every prayer",
+      "body": "The adhan by Mishary Rashid Alafasy at each of the five prayers, scheduled on your phone. No server is involved."
+    },
+    "quran": {
+      "title": "The Quran",
+      "body": "All 114 surahs in Uthmani script, with search in everyday Arabic, bookmarks, your reading position and adjustable text size."
+    },
+    "audio": {
+      "title": "Five reciters",
+      "body": "Listen ayah by ayah to Abdul Basit, Al-Husary, Al-Minshawi, As-Sudais or Alafasy, with the text following along."
+    },
+    "adhkar": {
+      "title": "Adhkar",
+      "body": "Morning, evening, sleep and after-prayer adhkar, each with its source and a counter that remembers your progress."
+    },
+    "qiblah": {
+      "title": "Qiblah",
+      "body": "A compass that uses your phone's sensors and corrects for magnetic declination, with the exact bearing from where you are."
+    },
+    "calendar": {
+      "title": "Hijri calendar",
+      "body": "Hijri and Gregorian dates side by side, adjustable to the moon sighting where you live."
+    },
+    "widgets": {
+      "title": "Home screen widgets",
+      "body": "The next prayer with a live countdown, or all of today's times, on your Android home screen."
+    }
+  },
+  "privacy": {
+    "eyebrow": "Private by design",
+    "title": "Your worship is nobody else's business",
+    "body": "Al-Muslim has no server. It cannot collect anything about you, because there is nowhere for it to go.",
+    "accounts": "No accounts, no ads and no analytics.",
+    "tracking": "No third-party code watching what you do.",
+    "location": "Your location is used on your device only, and it is optional: you can pick a city instead.",
+    "offline": "Prayer times, the Quran, adhkar, the qiblah and the calendar all work offline.",
+    "network": "The one time it uses the internet is to stream a recitation when you press play."
+  },
+  "design": {
+    "eyebrow": "Made with care",
+    "title": "Simple, fast and for everyone",
+    "languages": {
+      "title": "Arabic and English",
+      "body": "A complete right-to-left Arabic interface, not just a translation."
+    },
+    "themes": {
+      "title": "Four themes",
+      "body": "Light, dark, true-black AMOLED, or follow your system."
+    },
+    "access": {
+      "title": "Accessible",
+      "body": "Built for screen readers, large text, keyboard navigation and reduced motion."
+    }
+  },
+  "get": {
+    "eyebrow": "Get the app",
+    "title": "Free, on any device",
+    "web": {
+      "title": "In your browser",
+      "body": "Open it on any phone or computer and add it to your home screen. It keeps working offline."
+    },
+    "android": {
+      "title": "Android",
+      "body": "Download the APK from GitHub Releases. It adds adhan notifications with the app closed and home screen widgets."
+    },
+    "source": {
+      "title": "Source code",
+      "body": "Read it, build it yourself or contribute. Corrections to any religious text are especially welcome."
+    }
+  },
+  "footer": {
+    "license": "Al-Muslim is free software under the GNU General Public License v3.0.",
+    "developer": "Developed by Zyad Mohamed."
+  }
+}
