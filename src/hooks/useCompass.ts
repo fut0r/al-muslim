@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Coordinates } from '@/domain/prayer/types';
-import { angleDelta, normalizeDegrees } from '@/domain/qibla';
+import { angleDelta, normalizeDegrees, type CompassAccuracy } from '@/domain/qibla';
 import {
   compassNeedsPermission,
   magneticDeclination,
@@ -22,19 +22,32 @@ export interface CompassState {
   rotation: number | null;
   /** Declination applied to the sensor reading, or null if it could not be computed. */
   declination: number | null;
+  /** How much the sensor trusts itself. "low" means the compass needs calibrating. */
+  accuracy: CompassAccuracy;
+  /** True when the phone is held too upright for the heading to be trusted. */
+  tilted: boolean;
   /** Must be called from a tap: iOS only grants sensor access on a user gesture. */
   enable(): void;
 }
 
 // Low-pass filter strength: enough to stop the dial jittering, not enough to lag.
 const SMOOTHING = 0.25;
+/** Beyond this many degrees from flat, the direction of the top edge is no longer a steady reading. */
+const MAX_TILT = 60;
+
+interface Reading {
+  heading: number;
+  rotation: number;
+  accuracy: CompassAccuracy;
+  tilted: boolean;
+}
 
 export function useCompass(coordinates: Coordinates | null): CompassState {
   const [status, setStatus] = useState<CompassStatus>(() =>
     compassNeedsPermission() ? 'needs-permission' : 'starting',
   );
-  const [reading, setReading] = useState<{ heading: number; rotation: number } | null>(null);
-  const smoothed = useRef<{ heading: number; rotation: number } | null>(null);
+  const [reading, setReading] = useState<Reading | null>(null);
+  const smoothed = useRef<Reading | null>(null);
   const latitude = coordinates?.latitude;
   const longitude = coordinates?.longitude;
 
@@ -44,20 +57,37 @@ export function useCompass(coordinates: Coordinates | null): CompassState {
   );
   const declination = declinationState.status === 'ready' ? declinationState.value : null;
 
-  const listening = status === 'starting' || status === 'active';
+  // Only Safari really needs the tap; elsewhere the same request is granted silently.
+  useEffect(() => {
+    if (!compassNeedsPermission()) return;
+    let cancelled = false;
+    void requestCompassPermission().then((granted) => {
+      if (granted && !cancelled) setStatus((current) => (current === 'needs-permission' ? 'starting' : current));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // The sensor stays subscribed even after it has been reported unavailable:
+  // some are slow to wake, and a reading that arrives late still starts the compass.
+  const listening = status === 'starting' || status === 'active' || status === 'unavailable';
   useEffect(() => {
     if (!listening) return;
     let frame = 0;
     const stop = startCompass({
-      onHeading(magnetic) {
+      onReading({ heading, accuracy, tilt }) {
         const previous = smoothed.current;
+        const tilted = tilt !== null && tilt > MAX_TILT;
         if (previous === null) {
-          smoothed.current = { heading: magnetic, rotation: magnetic };
+          smoothed.current = { heading, rotation: heading, accuracy, tilted };
         } else {
-          const step = angleDelta(previous.heading, magnetic) * SMOOTHING;
+          const step = angleDelta(previous.heading, heading) * SMOOTHING;
           smoothed.current = {
             heading: normalizeDegrees(previous.heading + step),
             rotation: previous.rotation + step,
+            accuracy,
+            tilted,
           };
         }
         // Sensors fire far faster than the screen refreshes.
@@ -68,7 +98,7 @@ export function useCompass(coordinates: Coordinates | null): CompassState {
           setStatus('active');
         });
       },
-      onUnavailable: () => setStatus('unavailable'),
+      onUnavailable: () => setStatus((current) => (current === 'active' ? current : 'unavailable')),
     });
     return () => {
       stop();
@@ -86,6 +116,8 @@ export function useCompass(coordinates: Coordinates | null): CompassState {
     heading: reading === null ? null : normalizeDegrees(reading.heading + (declination ?? 0)),
     rotation: reading === null ? null : reading.rotation + (declination ?? 0),
     declination,
+    accuracy: reading?.accuracy ?? 'unknown',
+    tilted: reading?.tilted ?? false,
     enable,
   };
 }

@@ -11,8 +11,8 @@ import {
   resolveCalculation,
 } from './prayer/methods';
 import { computePrayerStatus, toCountdown, upcomingPrayers } from './prayer/schedule';
-import { PRAYER_IDS, type DayTimes } from './prayer/types';
-import { angleDelta, compassPoint, distanceToKaabaKm, qiblaBearing } from './qibla';
+import { isJumuah, PRAYER_IDS, type DayTimes } from './prayer/types';
+import { angleDelta, compassPoint, distanceToKaabaKm, headingFromOrientation, qiblaBearing } from './qibla';
 import { addRange, countAyahs, minimumReadingTime, sanitizeRanges } from './quran/progress';
 import { ayahStartSeconds, isValidTimings, positionAt, recitationUrl } from './quran/recitation';
 import { buildSearchIndex, normalizeArabic, searchAyahs } from './quran/search';
@@ -174,6 +174,19 @@ describe('prayer times', () => {
   });
 });
 
+describe('friday prayer', () => {
+  it('calls the midday prayer Jumu’ah on Fridays only', () => {
+    const friday = { year: 2026, month: 10, day: 9 };
+    expect(isJumuah('dhuhr', friday)).toBe(true);
+    expect(isJumuah('asr', friday)).toBe(false);
+    expect(isJumuah('fajr', friday)).toBe(false);
+    for (let offset = 1; offset <= 6; offset += 1) {
+      expect(isJumuah('dhuhr', addDays(friday, offset))).toBe(false);
+    }
+    expect(isJumuah('dhuhr', addDays(friday, 7))).toBe(true);
+  });
+});
+
 describe('prayer schedule', () => {
   const cairo = { latitude: 30.0444, longitude: 31.2357 };
   const day = (d: number): DayTimes =>
@@ -247,6 +260,27 @@ describe('qibla', () => {
     expect(angleDelta(350, 10)).toBe(20);
     expect(angleDelta(10, 350)).toBe(-20);
   });
+
+  it('turns a device orientation into a compass heading', () => {
+    // Alpha grows counter-clockwise, a heading clockwise.
+    expect(headingFromOrientation(0, 0)).toBe(0);
+    expect(headingFromOrientation(90, 0)).toBe(270);
+    expect(headingFromOrientation(270, 0)).toBe(90);
+    expect(headingFromOrientation(360, 0)).toBe(0);
+    // In landscape the top of the screen is a quarter turn from the top of the device.
+    expect(headingFromOrientation(0, 90)).toBe(90);
+    expect(headingFromOrientation(45, 270)).toBe(225);
+  });
+
+  it('tells which way to turn to face the qiblah', () => {
+    const bearing = qiblaBearing({ latitude: 31.2, longitude: 29.95 }); // Alexandria: south-east
+    expect(bearing).toBeGreaterThan(130);
+    expect(bearing).toBeLessThan(140);
+    // Facing north, the qiblah is to the right; facing south, to the left.
+    expect(angleDelta(0, bearing)).toBeGreaterThan(0);
+    expect(angleDelta(180, bearing)).toBeLessThan(0);
+    expect(Math.abs(angleDelta(bearing, bearing))).toBe(0);
+  });
 });
 
 describe('hijri calendar', () => {
@@ -306,6 +340,13 @@ describe('quran data and search', () => {
     expect(text.flat().some((ayah) => ayah.includes('\uFFFD') || ayah.trim() === '')).toBe(false);
     expect(ayahOrdinal({ surah: 114, ayah: 6 }, surahs)).toBe(TOTAL_AYAHS);
     expect(ayahOrdinal({ surah: 2, ayah: 1 }, surahs)).toBe(8);
+  });
+
+  it('keeps the superscript alef where the Quran typeface can draw it', () => {
+    // With a tatweel under it the typeface drops the alef, and ٱلرَّحْمَٰنِ loses a letter on screen.
+    expect(text.flat().some((ayah) => /\u0640\u0670/.test(ayah))).toBe(false);
+    expect(text[0]![2]).toBe('\u0671\u0644\u0631\u0651\u064E\u062D\u0652\u0645\u064E\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064E\u062D\u0650\u064A\u0645\u0650');
+    expect(text.flat().join('').split('\u0670')).toHaveLength(9727);
   });
 
   it('folds Uthmani spelling into everyday spelling', () => {

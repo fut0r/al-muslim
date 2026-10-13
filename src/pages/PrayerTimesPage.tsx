@@ -101,6 +101,7 @@ export default function PrayerTimesPage() {
         ) : (
           <PrayerTimesList
             times={times}
+            date={date}
             timeZone={location.timeZone}
             status={isToday && state.kind === 'ready' ? state.status : undefined}
             now={isToday ? now : undefined}

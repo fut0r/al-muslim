@@ -4,6 +4,7 @@ import { planNotifications } from '@/domain/prayer/notificationPlan';
 import { OBLIGATORY_PRAYER_IDS, type DayTimes } from '@/domain/prayer/types';
 import { addDays, type CivilDate } from '@/domain/time';
 import { createI18n } from '@/i18n';
+import { prayerName } from '@/i18n/format';
 import { ar } from '@/i18n/ar';
 import { en } from '@/i18n/en';
 import { adhkarStore, sanitizeAdhkarProgress, setDhikrCount } from './adhkar';
@@ -156,6 +157,38 @@ describe('notification plan', () => {
     expect(new Set(plan.map((item) => item.id)).size).toBe(15);
     expect(planNotifications({ from: new Date(0), days, enabled: all, limit: 4 })).toHaveLength(4);
     expect(plan.every((item) => Number.isInteger(item.id) && item.id < 2 ** 31)).toBe(true);
+  });
+
+  it('names the midday prayer of a Friday Jumu’ah', () => {
+    // 3 October 2026 is a Saturday, so the Friday in a week of days is the 9th.
+    const week = Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(start, index);
+      const times = calculateDayTimes({
+        date,
+        coordinates: { latitude: 30.05, longitude: 31.25 },
+        method: 'Egyptian',
+        madhab: 'shafi',
+      }) as DayTimes;
+      return { date, times };
+    });
+    const plan = planNotifications({ from: new Date(0), days: week, enabled: all, limit: 60 });
+    const middays = plan.filter((item) => item.prayer === 'dhuhr');
+    expect(middays).toHaveLength(7);
+    expect(middays.map((item) => prayerName(createI18n('en'), item.prayer, item.date))).toEqual([
+      'Dhuhr',
+      'Dhuhr',
+      'Dhuhr',
+      'Dhuhr',
+      'Dhuhr',
+      'Dhuhr',
+      'Jumu’ah',
+    ]);
+    const friday = middays[6]!;
+    expect(friday.date).toEqual({ year: 2026, month: 10, day: 9 });
+    expect(prayerName(createI18n('ar'), friday.prayer, friday.date)).toBe('الجمعة');
+    // Every other prayer of that Friday keeps its name.
+    const asr = plan.find((item) => item.prayer === 'asr' && item.date.day === 9)!;
+    expect(prayerName(createI18n('ar'), asr.prayer, asr.date)).toBe('العصر');
   });
 });
 

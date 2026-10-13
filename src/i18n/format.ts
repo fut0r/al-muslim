@@ -1,4 +1,5 @@
 import type { HijriDate } from '@/domain/hijri';
+import { isJumuah, type PrayerId } from '@/domain/prayer/types';
 import { civilToUtcNoon, type CivilDate } from '@/domain/time';
 import type { SavedLocation } from '@/stores/location';
 import type { I18n } from './index';
@@ -35,6 +36,11 @@ export function formatTime(i18n: I18n, date: Date, { hour12, timeZone }: TimeFor
     ...(hour12 ? {} : { hourCycle: 'h23' as const }),
     timeZone,
   }).format(date);
+}
+
+/** What a prayer is called on the day it falls: on Fridays the midday prayer is Jumu'ah. */
+export function prayerName(i18n: I18n, id: PrayerId, day: CivilDate): string {
+  return i18n.t(isJumuah(id, day) ? 'prayers.jumuah' : `prayers.${id}`);
 }
 
 export type DateStyle = 'full' | 'long' | 'short' | 'monthYear';

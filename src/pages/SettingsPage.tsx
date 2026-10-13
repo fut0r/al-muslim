@@ -42,6 +42,8 @@ import {
 import { LAYOUT, SAFE_AREA } from '@/theme/tokens';
 
 const REPOSITORY_URL = 'https://github.com/fut0r/Al-Muslim';
+/** The source of the Quran text, which asks for a link back to it. */
+const TANZIL_URL = 'https://tanzil.net/';
 
 const PERMISSION_LABELS = {
   granted: 'settings.permissionGranted',
@@ -242,7 +244,7 @@ export default function SettingsPage() {
             OBLIGATORY_PRAYER_IDS.map((id) => (
               <SwitchItem
                 key={id}
-                label={t('settings.notifyFor', { prayer: t(`prayers.${id}`) })}
+                label={t('settings.notifyFor', { prayer: t(id === 'dhuhr' ? 'prayers.dhuhrAndJumuah' : `prayers.${id}`) })}
                 checked={settings.notifications.prayers[id]}
                 onChange={(checked) =>
                   updateNotificationSettings({ prayers: { ...settings.notifications.prayers, [id]: checked } })
@@ -385,6 +387,7 @@ export default function SettingsPage() {
           <SettingItem label={t('settings.license')} description={t('settings.licenseValue')} />
           <SettingItem label={t('settings.repository')} description={t('settings.repositoryValue')} href={REPOSITORY_URL} />
           <SettingItem label={t('settings.privacy')} description={t('settings.privacyValue')} />
+          <SettingItem label={t('settings.quranText')} description={t('settings.quranTextValue')} href={TANZIL_URL} />
           <SettingItem label={t('settings.credits')} description={t('settings.creditsValue')} />
         </SettingsSection>
       </PageContent>

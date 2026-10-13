@@ -6,6 +6,8 @@ export interface PlannedNotification {
   id: number;
   prayer: ObligatoryPrayerId;
   at: Date;
+  /** The civil day the prayer belongs to at the user's location (Friday's Dhuhr is Jumu'ah). */
+  date: CivilDate;
 }
 
 export interface NotificationPlanInput {
@@ -23,7 +25,7 @@ export function planNotifications({ from, days, enabled, limit }: NotificationPl
       const at = times[prayer];
       if (!enabled[prayer] || at.getTime() <= from.getTime()) return;
       const dayNumber = (date.year % 100) * 10000 + date.month * 100 + date.day;
-      plan.push({ id: dayNumber * 10 + index, prayer, at });
+      plan.push({ id: dayNumber * 10 + index, prayer, at, date });
     });
   }
   return plan.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, limit);

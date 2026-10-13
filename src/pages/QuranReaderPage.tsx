@@ -40,7 +40,7 @@ import { useKeepAwake, usePageTitle } from '@/hooks/useDeviceFeatures';
 import { useMediaControls } from '@/hooks/useMediaControls';
 import { useRecitation } from '@/hooks/useRecitation';
 import { useI18n } from '@/i18n';
-import { getSurah } from '@/services/quranRepository';
+import { basmalahOf, getSurah } from '@/services/quranRepository';
 import { isBookmarked, markRead, setLastRead, toggleBookmark, useQuranState } from '@/stores/quran';
 import { QURAN_FONT_SCALE, updateSettings, useSettings } from '@/stores/settings';
 import { LAYOUT, SAFE_AREA } from '@/theme/tokens';
@@ -174,7 +174,7 @@ function Reader({ surahId }: { surahId: number }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [attempt, setAttempt] = useState(0);
   const text = useSurahText(surahId, attempt);
-  const basmalah = useSurahText(1);
+  const basmalah = basmalahOf(surahId);
   useKeepAwake();
   usePageTitle(surahDisplayName(i18n, surah), t('app.name'));
 
@@ -404,9 +404,9 @@ function Reader({ surahId }: { surahId: number }) {
               <ArabicText size={1.75} scale={quranFontScale} sx={{ textAlign: 'center', lineHeight: 1.9 }}>
                 سورة {surah.name}
               </ArabicText>
-              {showsBasmalah(surahId) && basmalah.status === 'ready' && (
+              {basmalah !== null && (
                 <ArabicText size={1.375} scale={quranFontScale} sx={{ textAlign: 'center', color: 'text.secondary', mt: 1 }}>
-                  {basmalah.ayahs[0]}
+                  {basmalah}
                 </ArabicText>
               )}
             </Box>

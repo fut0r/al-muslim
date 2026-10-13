@@ -56,7 +56,10 @@
             <p class="fineprint">{{t.hero.note}}</p>
           </div>
 
-          <!-- A static preview of the app's home screen, drawn with the app's own colours and type. -->
+          <!--
+            A static preview of the app's home screen, drawn with the app's own
+            colours and type, behind the transparent screen of a phone frame.
+          -->
           <div class="phone" aria-hidden="true">
             <div class="phone__screen">
               <div class="app-bar">
@@ -87,7 +90,15 @@
                 <li><span>{{t.preview.maghrib}}</span><span>{{t.preview.maghribTime}}</span></li>
                 <li><span>{{t.preview.isha}}</span><span>{{t.preview.ishaTime}}</span></li>
               </ul>
+              <ul class="app-nav">
+                <li class="is-active">{{icon.HomeOutlined}}<span>{{t.preview.nav.home}}</span></li>
+                <li>{{icon.MosqueOutlined}}<span>{{t.preview.nav.prayers}}</span></li>
+                <li>{{icon.MenuBookOutlined}}<span>{{t.preview.nav.quran}}</span></li>
+                <li>{{tasbih}}<span>{{t.preview.nav.adhkar}}</span></li>
+                <li>{{icon.MoreHorizOutlined}}<span>{{t.preview.nav.more}}</span></li>
+              </ul>
             </div>
+            <img class="phone__frame" src="{{root}}assets/{{phoneFrame}}" alt="" width="1339" height="2716" decoding="async" />
           </div>
         </div>
       </section>

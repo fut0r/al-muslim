@@ -29,7 +29,8 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
   Mishary Rashid Alafasy or the device's ordinary notification sound. A test notification confirms
   that they arrive, and a status screen shows what the system has scheduled and anything standing in
   the way (a refused permission, a silenced category, battery restrictions).
-- **Home** with the next prayer, a live countdown, today's times and both dates.
+- **Home** with the next prayer, a live countdown, today's times and both dates. On Fridays the
+  midday prayer is shown, and announced, as Jumu'ah.
 - **Quran**: all 114 surahs in Uthmani script, full-text search that understands everyday Arabic
   spelling, bookmarks, reading position, go-to-ayah and adjustable text size. Reading progress
   counts the ayahs you have actually read, surah by surah, not how far into the Quran you are.
@@ -40,8 +41,9 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
   controls, like a music player.
 - **Adhkar** for the morning, evening, sleep, after prayer and general remembrance, each with its
   source, a counter, progress that is saved for the day, and optional haptic feedback.
-- **Qiblah** compass using the device sensors, a great-circle bearing and magnetic declination. If
-  the device has no compass the app says so instead of showing a misleading one.
+- **Qiblah** compass with a great-circle bearing and magnetic declination. The Android app reads
+  the phone's sensors itself, warns when the compass needs calibrating or the phone is held too
+  upright, and says so plainly when the phone has no compass instead of showing a misleading one.
 - **Hijri calendar** (Umm al-Qura) with a dual Hijri/Gregorian month view and an adjustment for the
   local moon sighting.
 - **Android home screen widgets**: the next prayer with a live countdown, and today's times.
@@ -104,6 +106,7 @@ do:
 - `media`: a media playback service that keeps a recitation playing in the background and shows
   the media notification and lock screen controls.
 - `widgets`: the home screen widgets.
+- `compass`: the qiblah compass, read from the rotation sensor with the magnetometer's accuracy.
 
 You do not need Android Studio to get an APK: the **Android** workflow builds one on every push and
 attaches it to the run as the `al-muslim-debug-apk` artifact. Each run signs its debug APK with a
@@ -129,8 +132,8 @@ Pushing a version tag publishes a GitHub release with the APK. If `release-notes
 it becomes the text of the release; otherwise GitHub generates the notes from the commits.
 
 ```bash
-git tag v2.0.1
-git push origin v2.0.1
+git tag v2.0.2
+git push origin v2.0.2
 ```
 
 Android only installs an update over an app signed with the same key. To sign releases with your
@@ -146,7 +149,8 @@ certificate's fingerprint there.
 
 ### Website
 
-`site/` holds the landing page: one static template, its wording in English and Arabic, and a
+`site/` holds the landing page: one static template, its wording in English and Arabic, the photo
+of a phone that frames the app preview, and a
 stylesheet. `npm run site` renders it with the app's own design tokens, fonts, icons and logo, and
 places the built web app under `/app/`, so `dist-site/` can be published as is. The page uses no
 JavaScript.
@@ -195,9 +199,12 @@ colours.
 
 ## Data and credits
 
-- **Quran text**: Uthmani script as published by [Quran.com](https://quran.com), obtained through
-  the `quran-validator` package. The build script verifies the surah and ayah counts and a checksum
-  of the whole text. The text is never edited by hand.
+- **Quran text**: the Uthmani text of the [Tanzil Project](https://tanzil.net) (version 1.1,
+  Creative Commons Attribution 3.0), with pause marks, sajdah signs and rub-el-hizb signs. It is
+  used verbatim, as Tanzil's terms require: `npm run data:quran` downloads it, checks the surah
+  and ayah counts and a checksum of the whole text, and writes it out unchanged together with
+  Tanzil's notice (`public/data/quran/NOTICE.txt`). The app credits Tanzil with a link in its
+  settings. The text is never edited by hand.
 - **Recitations**: each reciter's complete murattal recording in the
   [mp3quran.net](https://www.mp3quran.net) library, streamed one surah at a time, so a surah is
   always in a single voice. The ayah timings that let the text follow the audio come from the same

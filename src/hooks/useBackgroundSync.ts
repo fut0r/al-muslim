@@ -4,7 +4,7 @@ import { planNotifications } from '@/domain/prayer/notificationPlan';
 import type { DayTimes } from '@/domain/prayer/types';
 import { addDays, civilDateInZone, type CivilDate } from '@/domain/time';
 import { useI18n } from '@/i18n';
-import { formatLocation, formatTime } from '@/i18n/format';
+import { formatLocation, formatTime, prayerName } from '@/i18n/format';
 import { locationPermission } from '@/services/geolocation';
 import { notificationOptions, notifications, notifyScheduleChanged } from '@/services/notifications';
 import { buildWidgetPayload, updateWidgets, widgetsSupported } from '@/services/widgets';
@@ -63,7 +63,8 @@ export function usePrayerNotificationSync(): void {
       if (cancelled) return;
       await notifications.replaceSchedule(
         plan.map((item) => {
-          const prayer = i18n.t(`prayers.${item.prayer}`);
+          // On a Friday the midday notification announces Jumu'ah.
+          const prayer = prayerName(i18n, item.prayer, item.date);
           const time = formatTime(i18n, item.at, { hour12, timeZone: location.timeZone });
           return {
             id: item.id,

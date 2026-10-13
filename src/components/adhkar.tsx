@@ -6,9 +6,8 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { memo } from 'react';
 import type { Dhikr, QuranPassage } from '@/data/adhkar';
-import { showsBasmalah } from '@/domain/quran/types';
 import { useI18n } from '@/i18n';
-import { getSurah } from '@/services/quranRepository';
+import { basmalahOf, getSurah } from '@/services/quranRepository';
 import { visuallyHidden } from './a11y';
 import { ArabicText, ayahMarker, useSurahText } from './quran';
 import { ErrorState, LoadingState } from './states';
@@ -17,18 +16,18 @@ import { ErrorState, LoadingState } from './states';
 function QuranPassageText({ passage }: { passage: QuranPassage }) {
   const { t } = useI18n();
   const surah = useSurahText(passage.surah);
-  const opening = useSurahText(1);
   const wholeSurah = passage.from === 1 && passage.to === getSurah(passage.surah)?.ayahs;
 
   if (surah.status === 'loading') return <LoadingState compact />;
   if (surah.status === 'error') return <ErrorState compact title={t('quran.loadErrorTitle')} body={t('quran.loadErrorBody')} />;
 
   const ayahs = surah.ayahs.slice(passage.from - 1, passage.to);
+  const basmalah = wholeSurah ? basmalahOf(passage.surah) : null;
   return (
     <>
-      {wholeSurah && showsBasmalah(passage.surah) && opening.status === 'ready' && (
+      {basmalah !== null && (
         <ArabicText size={1.25} sx={{ color: 'text.secondary' }}>
-          {opening.ayahs[0]}
+          {basmalah}
         </ArabicText>
       )}
       <ArabicText size={1.375}>

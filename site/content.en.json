@@ -26,7 +26,7 @@
   "preview": {
     "hijri": "24 Rabi' al-Thani 1448 AH",
     "gregorian": "Monday, October 5, 2026",
-    "city": "Cairo",
+    "city": "Alexandria",
     "next": "Next prayer",
     "now": "Now: Dhuhr",
     "nowTag": "Now",
@@ -37,12 +37,19 @@
     "asr": "Asr",
     "maghrib": "Maghrib",
     "isha": "Isha",
-    "fajrTime": "5:24 AM",
-    "sunriseTime": "6:50 AM",
-    "dhuhrTime": "12:44 PM",
-    "asrTime": "4:05 PM",
-    "maghribTime": "6:36 PM",
-    "ishaTime": "7:53 PM"
+    "fajrTime": "5:29 AM",
+    "sunriseTime": "6:56 AM",
+    "dhuhrTime": "12:50 PM",
+    "asrTime": "4:09 PM",
+    "maghribTime": "6:41 PM",
+    "ishaTime": "7:58 PM",
+    "nav": {
+      "home": "Home",
+      "prayers": "Prayers",
+      "quran": "Quran",
+      "adhkar": "Adhkar",
+      "more": "More"
+    }
   },
   "features": {
     "eyebrow": "What it does",

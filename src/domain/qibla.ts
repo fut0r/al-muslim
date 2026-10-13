@@ -41,6 +41,20 @@ export function compassPoint(bearing: number): CompassPoint {
   return COMPASS_POINTS[Math.round(normalizeDegrees(bearing) / 45) % 8] ?? 'N';
 }
 
+/** How much a compass sensor trusts its own reading; "unknown" where it does not say. */
+export type CompassAccuracy = 'high' | 'medium' | 'low' | 'unknown';
+
+/**
+ * Heading of the top of the screen, clockwise from north, from a device
+ * orientation as browsers report it. `alpha` is zero when the top of the
+ * device points north and grows as the device turns counter-clockwise;
+ * `screenAngle` is how far the screen's content is turned from the device's
+ * natural position. This holds for any tilt short of upright.
+ */
+export function headingFromOrientation(alpha: number, screenAngle: number): number {
+  return normalizeDegrees(360 - alpha + screenAngle);
+}
+
 /** Signed smallest rotation from `from` to `to`, in the range (−180, 180]. */
 export function angleDelta(from: number, to: number): number {
   const delta = normalizeDegrees(to - from);

@@ -155,7 +155,7 @@ export default function HomePage() {
 
         {state.kind === 'ready' ? (
           <>
-            <PrayerCard status={state.status} timeZone={state.timeZone} />
+            <PrayerCard status={state.status} timeZone={state.timeZone} today={state.today} />
             <Section
               title={t('home.todaysTimes')}
               action={
@@ -164,7 +164,13 @@ export default function HomePage() {
                 </Button>
               }
             >
-              <PrayerTimesList times={state.times} timeZone={state.timeZone} status={state.status} now={now} />
+              <PrayerTimesList
+                times={state.times}
+                date={state.today}
+                timeZone={state.timeZone}
+                status={state.status}
+                now={now}
+              />
             </Section>
           </>
         ) : state.kind === 'no-location' ? (

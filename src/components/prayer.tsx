@@ -3,9 +3,10 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import { toCountdown, type PrayerStatus } from '@/domain/prayer/schedule';
 import { PRAYER_IDS, type DayTimes, type PrayerId } from '@/domain/prayer/types';
+import { civilDateInZone, type CivilDate } from '@/domain/time';
 import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n';
-import { formatTime } from '@/i18n/format';
+import { formatTime, prayerName } from '@/i18n/format';
 import { useSettings } from '@/stores/settings';
 
 const pad = (value: number) => String(value).padStart(2, '0');
@@ -51,14 +52,18 @@ export function Countdown({ target, label }: { target: Date; label: string }) {
 export function PrayerCard({
   status,
   timeZone,
+  today,
 }: {
   status: PrayerStatus;
   timeZone: string | undefined;
+  /** Today's date at the location: it decides whether Dhuhr is called Jumu'ah. */
+  today: CivilDate;
 }) {
   const i18n = useI18n();
   const { t } = i18n;
   const { hour12 } = useSettings();
-  const nextName = t(`prayers.${status.next.id}`);
+  // The next prayer may be tomorrow's Fajr, so it is named by its own day.
+  const nextName = prayerName(i18n, status.next.id, civilDateInZone(status.next.time, timeZone));
 
   return (
     <Box component="section" aria-label={t('home.nextPrayer')}>
@@ -79,7 +84,7 @@ export function PrayerCard({
       <LinearProgress variant="determinate" value={Math.round(status.progress * 100)} aria-hidden />
       <Typography variant="body2" color="textSecondary" sx={{ mt: 1.25 }}>
         {status.current
-          ? t('home.currentPrayer', { prayer: t(`prayers.${status.current}`) })
+          ? t('home.currentPrayer', { prayer: prayerName(i18n, status.current, today) })
           : t('home.noCurrentPrayer')}
       </Typography>
     </Box>
@@ -91,11 +96,14 @@ export type PrayerRowState = 'past' | 'current' | 'next' | 'upcoming';
 /** One line of the timetable. State is conveyed by a text tag, not colour alone. */
 export function PrayerTimeRow({
   id,
+  name,
   time,
   timeZone,
   state = 'upcoming',
 }: {
   id: PrayerId;
+  /** What the prayer is called on this day. */
+  name: string;
   time: Date;
   timeZone: string | undefined;
   state?: PrayerRowState;
@@ -122,7 +130,7 @@ export function PrayerTimeRow({
       }}
     >
       <Typography variant="subtitle1" component="span" sx={{ fontWeight: highlighted ? 600 : 500 }}>
-        {i18n.t(`prayers.${id}`)}
+        {name}
       </Typography>
       {tag && (
         <Typography
@@ -156,15 +164,19 @@ export function PrayerTimeRow({
 /** The six times of a day. Pass `status` only when the day shown is today. */
 export function PrayerTimesList({
   times,
+  date,
   timeZone,
   status,
   now,
 }: {
   times: DayTimes;
+  /** The day the times belong to. */
+  date: CivilDate;
   timeZone: string | undefined;
   status?: PrayerStatus;
   now?: Date;
 }) {
+  const i18n = useI18n();
   const rowState = (id: PrayerId): PrayerRowState => {
     if (!status || !now) return 'upcoming';
     // "Next" may be tomorrow's Fajr, in which case nothing in today's list is next.
@@ -176,7 +188,14 @@ export function PrayerTimesList({
   return (
     <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
       {PRAYER_IDS.map((id) => (
-        <PrayerTimeRow key={id} id={id} time={times[id]} timeZone={timeZone} state={rowState(id)} />
+        <PrayerTimeRow
+          key={id}
+          id={id}
+          name={prayerName(i18n, id, date)}
+          time={times[id]}
+          timeZone={timeZone}
+          state={rowState(id)}
+        />
       ))}
     </Box>
   );

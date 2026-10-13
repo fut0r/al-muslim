@@ -87,4 +87,13 @@ describe('widget schedule', () => {
     expect(payload.labels.nextPrayer).toBe('الصلاة القادمة');
     expect(payload.days[0]!.prayers[0]!.name).toBe('الفجر');
   });
+
+  it('shows Jumu’ah in place of Dhuhr on Fridays', () => {
+    const payload = buildWidgetPayload({ ...base, i18n: createI18n('ar'), location: cairo, locationLabel: 'القاهرة' });
+    const midday = (date: string) => payload.days.find((day) => day.date === date)!.prayers[2]!.name;
+    expect(midday('2026-10-08')).toBe('الظهر');
+    expect(midday('2026-10-09')).toBe('الجمعة');
+    expect(midday('2026-10-10')).toBe('الظهر');
+    expect(payload.days.filter((day) => day.prayers[2]!.name === 'الجمعة')).toHaveLength(4);
+  });
 });

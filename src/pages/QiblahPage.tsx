@@ -164,6 +164,17 @@ function Qiblah({ location }: { location: SavedLocation }) {
               <Box role="status" sx={visuallyHidden}>
                 {aligned ? t('qiblah.facing') : ''}
               </Box>
+              {/* A wrong direction is worse than none: say so when the reading cannot be trusted. */}
+              {live && compass.accuracy === 'low' && (
+                <Alert severity="warning" variant="outlined" role="status">
+                  {t('qiblah.lowAccuracy')}
+                </Alert>
+              )}
+              {live && compass.tilted && (
+                <Alert severity="info" variant="outlined" role="status">
+                  {t('qiblah.holdFlat')}
+                </Alert>
+              )}
               <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center' }}>
                 {t('qiblah.calibrate')}{' '}
                 {compass.declination === null

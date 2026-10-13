@@ -5,6 +5,7 @@
 //   - site/styles.css                                   (layout)
 //   - src/theme/tokens.ts and src/theme/fonts.css       (the app's own colours and fonts)
 //   - @mui/icons-material and public/logo-mark.svg      (the app's own icons and logo)
+//   - site/apple-iphone14pro-deeppurple-portrait.png    (the phone the preview is shown in)
 // so it always looks like the app it presents.
 //
 // If the web app has been built (dist/), it is copied to dist-site/app/, giving
@@ -21,6 +22,8 @@ import { COLOR_TOKENS, FONTS, RADIUS } from '../src/theme/tokens.ts';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'dist-site');
 const REPOSITORY = 'https://github.com/fut0r/al-muslim';
+/** The phone the app preview is shown in: a photo of the device with a transparent screen. */
+const PHONE_FRAME = 'apple-iphone14pro-deeppurple-portrait.png';
 const LANGUAGES = [
   { lang: 'en', dir: 'ltr', path: '' },
   { lang: 'ar', dir: 'rtl', path: 'ar/' },
@@ -166,6 +169,7 @@ for (const { lang, dir, path } of LANGUAGES) {
     tasbih,
     releases: `${REPOSITORY}/releases`,
     repository: REPOSITORY,
+    phoneFrame: PHONE_FRAME,
     themeLight: COLOR_TOKENS.light.background,
     themeDark: COLOR_TOKENS.dark.background,
   };
@@ -186,6 +190,7 @@ for (const { lang, dir, path } of LANGUAGES) {
 }
 
 copyFileSync(join(root, 'public', 'favicon.svg'), join(out, 'favicon.svg'));
+copyFileSync(join(root, 'site', PHONE_FRAME), join(out, 'assets', PHONE_FRAME));
 writeFileSync(join(out, '.nojekyll'), '', 'utf8');
 
 // --- The web app, under /app/ ---------------------------------------------------

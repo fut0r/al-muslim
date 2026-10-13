@@ -5,7 +5,7 @@ import type { CalculationMethodId } from '@/domain/prayer/methods';
 import { PRAYER_IDS, type Coordinates, type Madhab, type PrayerId } from '@/domain/prayer/types';
 import { addDays, civilDateInZone, civilDateKey } from '@/domain/time';
 import type { I18n } from '@/i18n';
-import { formatHijri, formatTime } from '@/i18n/format';
+import { formatHijri, formatTime, prayerName } from '@/i18n/format';
 
 export type WidgetKind = 'next' | 'times';
 
@@ -83,7 +83,7 @@ export function buildWidgetPayload(input: WidgetPayloadInput): WidgetPayload {
       hijri: formatHijri(i18n, toHijri(date, hijriAdjustment)),
       prayers: PRAYER_IDS.map((id) => ({
         id,
-        name: i18n.t(`prayers.${id}`),
+        name: prayerName(i18n, id, date),
         at: times[id].getTime(),
         time: formatTime(i18n, times[id], { hour12, timeZone: location.timeZone }),
       })),

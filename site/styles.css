@@ -296,48 +296,68 @@ h3 {
 
 /* --- Phone preview (mirrors the app's home screen) ------------------------- */
 
+/*
+ * The frame is a photo of the phone with a transparent screen, 1339 x 2716
+ * pixels. Its screen opening starts 80 pixels in from every edge and has
+ * corners of 166 pixels; the island reaches 144 pixels into it. The preview
+ * sits in that opening, behind the frame.
+ */
 .phone {
+  position: relative;
   justify-self: center;
-  width: min(100%, 320px);
-  padding: 10px;
-  border: 1px solid var(--divider);
-  border-radius: 40px;
-  background: var(--surface);
+  width: min(100%, 340px);
+  aspect-ratio: 1339 / 2716;
+  container-type: inline-size;
+}
+
+.phone__frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
 }
 
 .phone__screen {
+  position: absolute;
+  inset: 2.946% 5.975%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 16px 16px;
-  border: 1px solid var(--divider);
-  border-radius: 30px;
+  gap: 0.46em;
+  /* The top padding clears the island. */
+  padding: 3.6em 1.25em 0;
+  border-radius: 14.1% / 6.5%;
   background: var(--bg);
-  font-size: 0.8125rem;
+  overflow: hidden;
+  /* Everything inside is sized in em, so the preview scales with the frame: 13px at full width. */
+  font-size: 13px;
+  font-size: 3.824cqw;
   line-height: 1.5;
 }
 
 .phone .overline {
-  font-size: 0.625rem;
-  margin-block-start: 10px;
+  font-size: 0.77em;
+  margin-block-start: 0.9em;
 }
 
 html[lang='ar'] .phone .overline {
-  font-size: 0.6875rem;
+  font-size: 0.846em;
 }
 
 .app-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.53em;
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 0.9375rem;
+  font-size: 1.154em;
 }
 
 .app-bar > svg {
-  width: 22px;
-  height: 22px;
+  width: 1.47em;
+  height: 1.47em;
   color: var(--primary);
   stroke: currentColor;
 }
@@ -346,17 +366,21 @@ html[lang='ar'] .phone .overline {
   flex: 1;
 }
 
-.app-bar__icon svg,
+.app-bar__icon svg {
+  width: 1.2em;
+  height: 1.2em;
+}
+
 .app-place svg {
-  width: 18px;
-  height: 18px;
+  width: 1.5em;
+  height: 1.5em;
 }
 
 .app-dates {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
-  margin-block-start: 8px;
+  gap: 0.6em;
+  margin-block-start: 0.6em;
 }
 
 .app-hijri {
@@ -368,13 +392,13 @@ html[lang='ar'] .phone .overline {
 .app-place,
 .app-now {
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.923em;
 }
 
 .app-place {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 0.15em;
   white-space: nowrap;
 }
 
@@ -387,7 +411,7 @@ html[lang='ar'] .phone .overline {
 .app-next__name {
   color: var(--primary);
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.846em;
   line-height: 1.15;
   text-transform: uppercase;
 }
@@ -395,7 +419,7 @@ html[lang='ar'] .phone .overline {
 html[lang='ar'] .app-next__name {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 1.375rem;
+  font-size: 1.692em;
   line-height: 1.4;
 }
 
@@ -407,7 +431,7 @@ html[lang='ar'] .app-next__name {
 
 .app-countdown {
   font-family: var(--font-display);
-  font-size: 3.25rem;
+  font-size: 4em;
   line-height: 1;
   letter-spacing: 0.02em;
   text-align: start;
@@ -418,9 +442,9 @@ html[dir='rtl'] .app-countdown {
 }
 
 .app-progress {
-  height: 4px;
-  margin-block: 8px 2px;
-  border-radius: 4px;
+  height: 0.3em;
+  margin-block: 0.6em 0.15em;
+  border-radius: 0.3em;
   background: var(--track);
   overflow: hidden;
 }
@@ -429,24 +453,24 @@ html[dir='rtl'] .app-countdown {
   display: block;
   width: 62%;
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0.3em;
   background: var(--primary);
 }
 
 .app-times {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-block-start: 10px;
+  gap: 0.15em;
+  margin-block-start: 0.75em;
 }
 
 .app-times li {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 34px;
-  padding-inline: 10px;
-  border-radius: 10px;
+  min-height: 3em;
+  padding-inline: 0.77em;
+  border-radius: 0.77em;
   font-family: var(--font-heading);
   font-weight: 500;
 }
@@ -461,14 +485,46 @@ html[dir='rtl'] .app-countdown {
 }
 
 .app-times em {
-  margin-inline-start: 6px;
-  padding: 1px 8px;
+  margin-inline-start: 0.45em;
+  padding: 0.08em 0.6em;
   border: 1px solid var(--primary);
   border-radius: 99px;
   color: var(--primary);
   font-style: normal;
   font-weight: 500;
-  font-size: 0.6875rem;
+  font-size: 0.846em;
+}
+
+/* The app's bottom navigation, resting on the bottom edge of the screen. */
+.app-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: auto;
+  margin-inline: -1.25em;
+  padding: 0.6em 0.9em 1.5em;
+  border-block-start: 1px solid var(--divider);
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+
+.app-nav li {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  font-family: var(--font-heading);
+  font-size: 0.77em;
+  font-weight: 500;
+}
+
+.app-nav svg {
+  width: 2em;
+  height: 2em;
+}
+
+.app-nav .is-active {
+  color: var(--primary);
 }
 
 /* --- Sections -------------------------------------------------------------- */

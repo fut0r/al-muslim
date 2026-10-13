@@ -1,3 +1,5 @@
+import { weekdayOf, type CivilDate } from '../time';
+
 export const PRAYER_IDS = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export type PrayerId = (typeof PRAYER_IDS)[number];
 
@@ -17,6 +19,16 @@ export type DayTimes = Record<PrayerId, Date>;
 
 export function isObligatory(id: PrayerId): id is ObligatoryPrayerId {
   return id !== 'sunrise';
+}
+
+const FRIDAY = 5;
+
+/**
+ * On Fridays the midday prayer is the Friday prayer, Jumu'ah. It is held at
+ * the time of Dhuhr, so only what the prayer is called changes.
+ */
+export function isJumuah(id: PrayerId, day: CivilDate): boolean {
+  return id === 'dhuhr' && weekdayOf(day) === FRIDAY;
 }
 
 export function isValidCoordinates(value: Coordinates): boolean {

@@ -1,6 +1,7 @@
+import basmalahJson from '@/data/quran/basmalah.json';
 import surahsJson from '@/data/quran/surahs.json';
 import { buildSearchIndex, type SearchIndex } from '@/domain/quran/search';
-import { SURAH_COUNT, type SurahInfo } from '@/domain/quran/types';
+import { showsBasmalah, SURAH_COUNT, type SurahInfo } from '@/domain/quran/types';
 import { assetUrl } from './platform';
 
 export const SURAHS = surahsJson as readonly SurahInfo[];
@@ -9,11 +10,23 @@ export function getSurah(id: number): SurahInfo | undefined {
   return Number.isInteger(id) ? SURAHS[id - 1] : undefined;
 }
 
+/**
+ * The basmalah printed above a surah, exactly as the source text gives it for
+ * that surah, or null where none is shown: it is the first ayah of Al-Fatihah,
+ * and At-Tawbah has none.
+ */
+export function basmalahOf(surahId: number): string | null {
+  if (!showsBasmalah(surahId)) return null;
+  const variants: Record<string, string | undefined> = basmalahJson.variants;
+  return variants[String(surahId)] ?? basmalahJson.text;
+}
+
 const surahCache = new Map<number, Promise<readonly string[]>>();
 
 /**
- * The ayahs of one surah. Each surah is a small separate file, so opening the
- * reader never loads the whole Quran. Files are precached for offline use.
+ * The ayahs of one surah, from the Tanzil Project's Uthmani text. Each surah is
+ * a small separate file, so opening the reader never loads the whole Quran.
+ * Files are precached for offline use.
  */
 export function loadSurah(id: number): Promise<readonly string[]> {
   const info = getSurah(id);

@@ -26,7 +26,7 @@
   "preview": {
     "hijri": "24 ربيع الآخر 1448 هـ",
     "gregorian": "الاثنين، 5 أكتوبر 2026",
-    "city": "القاهرة",
+    "city": "الإسكندرية",
     "next": "الصلاة القادمة",
     "now": "الآن: وقت الظهر",
     "nowTag": "الآن",
@@ -37,12 +37,19 @@
     "asr": "العصر",
     "maghrib": "المغرب",
     "isha": "العشاء",
-    "fajrTime": "5:24 ص",
-    "sunriseTime": "6:50 ص",
-    "dhuhrTime": "12:44 م",
-    "asrTime": "4:05 م",
-    "maghribTime": "6:36 م",
-    "ishaTime": "7:53 م"
+    "fajrTime": "5:29 ص",
+    "sunriseTime": "6:56 ص",
+    "dhuhrTime": "12:50 م",
+    "asrTime": "4:09 م",
+    "maghribTime": "6:41 م",
+    "ishaTime": "7:58 م",
+    "nav": {
+      "home": "الرئيسية",
+      "prayers": "الصلاة",
+      "quran": "القرآن",
+      "adhkar": "الأذكار",
+      "more": "المزيد"
+    }
   },
   "features": {
     "eyebrow": "ماذا يقدّم",
