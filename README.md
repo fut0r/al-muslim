@@ -32,13 +32,15 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
 - **Home** with the next prayer, a live countdown, today's times and both dates. On Fridays the
   midday prayer is shown, and announced, as Jumu'ah.
 - **Quran**: all 114 surahs in Uthmani script, full-text search that understands everyday Arabic
-  spelling, bookmarks, reading position, go-to-ayah and adjustable text size. Reading progress
-  counts the ayahs you have actually read, surah by surah, not how far into the Quran you are.
+  spelling, bookmarks, reading position, go-to-ayah and adjustable text size. Each ayah has a short
+  tafsir, Al-Mukhtasar, in Arabic and English, bundled with the app and shown as published. Reading
+  progress counts the ayahs you have actually read, surah by surah, not how far into the Quran you are.
 - **Recitations**: listen with the text following along ayah by ayah, and start from any ayah, with
   Abdul Basit Abdus-Samad, Mahmoud Khalil Al-Husary, Muhammad Siddiq Al-Minshawi, Abdur-Rahman
-  As-Sudais, Maher Al-Muaiqly, Saad Al-Ghamdi or Mishary Rashid Alafasy. A recitation keeps playing
-  when you leave the app or lock the screen, with the surah, ayah and reciter in the system's media
-  controls, like a music player.
+  As-Sudais, Maher Al-Muaiqly, Saad Al-Ghamdi or Mishary Rashid Alafasy. An ayah can be repeated,
+  and the volume is changed in the player itself. A recitation keeps playing when you leave the app
+  or lock the screen, with the surah, ayah and reciter in the system's media controls, like a music
+  player.
 - **Adhkar** for the morning, evening, sleep, after prayer and general remembrance, each with its
   source, a counter, progress that is saved for the day, and optional haptic feedback.
 - **Qiblah** compass with a great-circle bearing and magnetic declination. The Android app reads
@@ -46,7 +48,8 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
   upright, and says so plainly when the phone has no compass instead of showing a misleading one.
 - **Hijri calendar** (Umm al-Qura) with a dual Hijri/Gregorian month view and an adjustment for the
   local moon sighting.
-- **Android home screen widgets**: the next prayer with a live countdown, and today's times.
+- **Android home screen widgets**: the next prayer with a live countdown and the Hijri date, and
+  today's times with the location and the time left until the next prayer.
 - Arabic and English, with a fully right-to-left Arabic interface.
 - Light, dark, AMOLED (true black) and system themes.
 - Works offline. Location is optional: you can pick a city from a bundled list instead.
@@ -55,8 +58,8 @@ It runs as a web app that can be installed (PWA) and as an Android app built fro
 
 - No analytics, trackers, ads, accounts or third-party SDKs. No server.
 - **One network use, and only when you ask for it:** listening to a recitation streams audio from
-  `cdn.mp3quran.net` when you press play. Everything else works offline, and a content security
-  policy in `index.html` allows nothing but the app's own origin and that audio host.
+  `cdn.mp3quran.net` when you press play. Everything else works offline, including the tafsir, and a
+  content security policy in `index.html` allows nothing but the app's own origin and that audio host.
 - Location is requested only when you ask for it, used on the device and stored only on the device.
   A GPS position is labelled with the nearest city from a bundled list, never by a geocoding service.
 - Bookmarks, reading position, adhkar progress and settings are kept in local storage on the device.
@@ -94,6 +97,7 @@ npm run dev
 | `npm run data:quran`      | Regenerate the Quran data files (see the script)       |
 | `npm run data:recitation` | Regenerate the ayah timings for the recitations        |
 | `npm run data:cities`     | Regenerate the city list (see the script)              |
+| `npm run data:tafsir`     | Regenerate the bundled tafsir (see the script)         |
 
 ### Android
 
@@ -169,10 +173,10 @@ src/
   domain/       Pure logic with no UI or browser APIs: prayer times, schedule, qibla, Hijri, search
   services/     Device and platform access: location, notifications, audio, compass, widgets, storage
   stores/       Persistent state (settings, location, Quran, adhkar), validated on load
-  data/         Static content: adhkar, surah index, reciters
+  data/         Static content: adhkar, surah index, reciters, tafsir credits
   i18n/         English and Arabic strings and formatting
   theme/        Design tokens, MUI theme, fonts
-public/         Quran text (one file per surah), the city list, the adhan, icons
+public/         Quran text and tafsir (one file per surah), the city list, the adhan, icons
 site/           Landing page template, wording and styles
 scripts/        Data, icon and site generators
 android/        Capacitor Android project, including the widgets
@@ -205,6 +209,11 @@ colours.
   and ayah counts and a checksum of the whole text, and writes it out unchanged together with
   Tanzil's notice (`public/data/quran/NOTICE.txt`). The app credits Tanzil with a link in its
   settings. The text is never edited by hand.
+- **Tafsir**: [Al-Mukhtasar](https://tafsir.net/) (المختصر في تفسير القرآن الكريم), Arabic and
+  English, published by the Tafsir Center for Quranic Studies. `npm run data:tafsir` copies it
+  verbatim from the pinned export, checks every surah, and writes it beside the publisher's notice
+  (`public/data/tafsir/NOTICE.txt`). An ayah that edition leaves without its own note stays empty.
+  The text is never edited by hand, and it is not a summary written for this app.
 - **Recitations**: each reciter's complete murattal recording in the
   [mp3quran.net](https://www.mp3quran.net) library, streamed one surah at a time, so a surah is
   always in a single voice. The ayah timings that let the text follow the audio come from the same

@@ -6,6 +6,7 @@ import BookmarkBorderOutlined from '@mui/icons-material/BookmarkBorderOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
 import FormatSizeOutlined from '@mui/icons-material/FormatSizeOutlined';
 import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
+import MenuBookOutlined from '@mui/icons-material/MenuBookOutlined';
 import PinOutlined from '@mui/icons-material/PinOutlined';
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
 import RemoveOutlined from '@mui/icons-material/RemoveOutlined';
@@ -33,6 +34,7 @@ import { ArabicText, ayahMarker, surahDisplayName, surahMeta, useSurahText } fro
 import { RECITATION_BAR_SPACE, RecitationBar } from '@/components/RecitationBar';
 import { ChoiceDialog } from '@/components/settings';
 import { ErrorState, LoadingState } from '@/components/states';
+import { TafsirDialog } from '@/components/TafsirDialog';
 import { getReciter, RECITERS } from '@/data/reciters';
 import { minimumReadingTime } from '@/domain/quran/progress';
 import { showsBasmalah } from '@/domain/quran/types';
@@ -166,8 +168,8 @@ function Reader({ surahId }: { surahId: number }) {
   const i18n = useI18n();
   const { t } = i18n;
   const surah = getSurah(surahId)!;
-  const { quranFontScale, reciter: reciterId } = useSettings();
-  const recitation = useRecitation(surahId, reciterId);
+  const { quranFontScale, reciter: reciterId, ayahRepeat, playbackVolume } = useSettings();
+  const recitation = useRecitation(surahId, reciterId, { repeat: ayahRepeat, volume: playbackVolume });
   const reciter = getReciter(reciterId);
   const reciterName = i18n.language === 'ar' ? reciter.name.ar : reciter.name.en;
   const quran = useQuranState();
@@ -189,6 +191,7 @@ function Reader({ surahId }: { surahId: number }) {
   const [sizeAnchor, setSizeAnchor] = useState<HTMLElement | null>(null);
   const [copied, setCopied] = useState(false);
   const [reciterOpen, setReciterOpen] = useState(false);
+  const [tafsirAyah, setTafsirAyah] = useState<number | null>(null);
   const container = useRef<HTMLDivElement>(null);
   const ready = text.status === 'ready';
 
@@ -473,6 +476,10 @@ function Reader({ surahId }: { surahId: number }) {
         recitation={recitation}
         reciterName={reciterName}
         basmalah={showsBasmalah(surahId)}
+        repeat={ayahRepeat}
+        volume={playbackVolume}
+        onRepeat={(ayahRepeat) => updateSettings({ ayahRepeat })}
+        onVolume={(playbackVolume) => updateSettings({ playbackVolume })}
         onChooseReciter={() => setReciterOpen(true)}
       />
 
@@ -488,6 +495,17 @@ function Reader({ surahId }: { surahId: number }) {
         >
           <ListItemIcon>{menuBookmarked ? <Bookmark /> : <BookmarkBorderOutlined />}</ListItemIcon>
           <ListItemText>{menuBookmarked ? t('quran.removeBookmark') : t('quran.bookmark')}</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menu) setTafsirAyah(menu.ayah);
+            setMenu(null);
+          }}
+        >
+          <ListItemIcon>
+            <MenuBookOutlined />
+          </ListItemIcon>
+          <ListItemText>{t('quran.tafsir')}</ListItemText>
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -569,12 +587,16 @@ function Reader({ surahId }: { surahId: number }) {
         }}
       />
 
+      <TafsirDialog surahId={surahId} ayah={tafsirAyah} onClose={() => setTafsirAyah(null)} />
+
       <Snackbar
         open={copied}
         autoHideDuration={2000}
         onClose={() => setCopied(false)}
         message={t('common.copied')}
-        sx={{ bottom: `calc(${LAYOUT.bottomNavHeight}px + ${SAFE_AREA.bottom} + 12px) !important` }}
+        sx={{
+          bottom: `calc(${listening ? RECITATION_BAR_SPACE : 0}px + ${LAYOUT.bottomNavHeight}px + ${SAFE_AREA.bottom} + 12px) !important`,
+        }}
       />
     </>
   );

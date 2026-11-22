@@ -37,6 +37,7 @@ final class WidgetData {
     String labelNextPrayer;
     String labelToday;
     String labelOpen;
+    String labelRemaining;
     final List<Day> days = new ArrayList<>();
 
     private WidgetData() {}
@@ -56,6 +57,7 @@ final class WidgetData {
                 data.labelNextPrayer = text(labels, "nextPrayer");
                 data.labelToday = text(labels, "today");
                 data.labelOpen = text(labels, "open");
+                data.labelRemaining = text(labels, "remaining");
             }
 
             JSONArray days = root.optJSONArray("days");

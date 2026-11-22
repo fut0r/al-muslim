@@ -45,7 +45,12 @@ describe('stores recover from damaged data', () => {
     expect(Object.keys(settings.notifications.prayers)).toEqual([...OBLIGATORY_PRAYER_IDS]);
     expect(settings.quranFontScale).toBe(1.8);
     expect(settings.hijriAdjustment).toBe(0);
+    expect(settings.ayahRepeat).toBe(1);
+    expect(settings.playbackVolume).toBe(1);
     expect(settings.onboarded).toBe(false);
+    expect(sanitizeSettings({ ayahRepeat: 0, playbackVolume: 0 })).toMatchObject({ ayahRepeat: 0, playbackVolume: 0 });
+    expect(sanitizeSettings({ ayahRepeat: 4, playbackVolume: 2 })).toMatchObject({ ayahRepeat: 1, playbackVolume: 1 });
+    expect(sanitizeSettings({ ayahRepeat: 10, playbackVolume: 0.26 }).playbackVolume).toBe(0.3);
     expect(sanitizeSettings(undefined)).toEqual(sanitizeSettings('garbage'));
     expect(sanitizeSettings({ theme: 'amoled', hijriAdjustment: 7 })).toMatchObject({ theme: 'amoled', hijriAdjustment: 2 });
   });

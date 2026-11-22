@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import type { AyahRepeat } from '@/domain/playback';
 import type { ReciterId } from '@/data/reciters';
 import { RecitationPlayer, type RecitationState } from '@/services/recitationPlayer';
 import { loadRecitation } from '@/services/recitationRepository';
@@ -22,9 +23,13 @@ export interface Recitation {
 /**
  * Listening to one surah. Playback belongs to the reader screen: it stops
  * when the screen is left, and carries on from the current ayah in the new
- * voice if the reciter changes.
+ * voice if the reciter changes. Repeat and volume follow the saved settings.
  */
-export function useRecitation(surahId: number, reciterId: ReciterId): Recitation {
+export function useRecitation(
+  surahId: number,
+  reciterId: ReciterId,
+  playback: { repeat: AyahRepeat; volume: number },
+): Recitation {
   const [player] = useState(() => new RecitationPlayer());
   const state = useSyncExternalStore(player.subscribe, player.getState, player.getState);
 
@@ -34,6 +39,14 @@ export function useRecitation(surahId: number, reciterId: ReciterId): Recitation
   useEffect(() => {
     player.changeSource(() => loadRecitation(reciterId, surahId));
   }, [player, reciterId, surahId]);
+
+  useEffect(() => {
+    player.setRepeat(playback.repeat);
+  }, [player, playback.repeat]);
+
+  useEffect(() => {
+    player.setVolume(playback.volume);
+  }, [player, playback.volume]);
 
   const playFrom = useCallback(
     (ayah: number) => player.play(() => loadRecitation(reciterId, surahId), ayah),

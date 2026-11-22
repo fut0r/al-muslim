@@ -10,6 +10,8 @@
     <string name="widget_open_app">افتح المسلم لعرض مواقيت الصلاة</string>
     <string name="widget_sample_prayer">العصر</string>
     <string name="widget_sample_time">3:07 م</string>
+    <string name="widget_sample_location">الإسكندرية</string>
+    <string name="widget_sample_hijri">24 ربيع الآخر</string>
     <string name="widget_fajr">الفجر</string>
     <string name="widget_sunrise">الشروق</string>
     <string name="widget_dhuhr">الظهر</string>

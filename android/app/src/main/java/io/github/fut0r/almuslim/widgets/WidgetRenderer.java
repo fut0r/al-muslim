@@ -72,11 +72,12 @@ final class WidgetRenderer {
         views.setTextViewText(R.id.widget_prayer_name, next.name);
         views.setTextViewText(R.id.widget_prayer_time, next.time);
         views.setTextViewText(R.id.widget_location, data.location == null ? "" : data.location);
+        WidgetData.Day today = data.today(now);
+        views.setTextViewText(R.id.widget_hijri, today == null || today.hijri == null ? "" : today.hijri);
+        if (data.labelRemaining != null) views.setContentDescription(R.id.widget_countdown, data.labelRemaining);
 
         // The system keeps this countdown ticking; the widget itself is not redrawn every second.
-        long base = SystemClock.elapsedRealtime() + (next.at - now);
-        views.setChronometerCountDown(R.id.widget_countdown, true);
-        views.setChronometer(R.id.widget_countdown, base, null, true);
+        showCountdown(views, R.id.widget_countdown, next.at, now);
         return views;
     }
 
@@ -95,8 +96,20 @@ final class WidgetRenderer {
         views.setViewVisibility(R.id.widget_message, View.GONE);
         if (data.labelToday != null) views.setTextViewText(R.id.widget_label, data.labelToday);
         views.setTextViewText(R.id.widget_date, today.hijri == null ? "" : today.hijri);
+        views.setTextViewText(R.id.widget_location, data.location == null ? "" : data.location);
 
         WidgetData.Prayer next = data.nextPrayer(now);
+        if (next == null) {
+            views.setViewVisibility(R.id.widget_next_name, View.GONE);
+            views.setViewVisibility(R.id.widget_countdown, View.GONE);
+        } else {
+            views.setViewVisibility(R.id.widget_next_name, View.VISIBLE);
+            views.setViewVisibility(R.id.widget_countdown, View.VISIBLE);
+            views.setTextViewText(R.id.widget_next_name, next.name);
+            if (data.labelRemaining != null) views.setContentDescription(R.id.widget_countdown, data.labelRemaining);
+            showCountdown(views, R.id.widget_countdown, next.at, now);
+        }
+
         int primary = context.getColor(R.color.widget_text);
         int secondary = context.getColor(R.color.widget_text_secondary);
         int brand = context.getColor(R.color.brand);
@@ -112,14 +125,21 @@ final class WidgetRenderer {
             int color = isNext ? brand : muted ? secondary : primary;
 
             views.setViewVisibility(ROW_IDS[i], View.VISIBLE);
-            // The next prayer is set apart by weight and a tinted row, not by colour alone.
-            views.setInt(ROW_IDS[i], "setBackgroundResource", isNext ? R.drawable.widget_row_highlight : 0);
+            // A fresh layout has no row background. Setting resource 0 to clear one
+            // throws on some launchers, so the highlight is applied only to the next prayer.
+            if (isNext) views.setInt(ROW_IDS[i], "setBackgroundResource", R.drawable.widget_row_highlight);
             views.setTextViewText(NAME_IDS[i], isNext ? bold(prayer.name) : prayer.name);
             views.setTextViewText(TIME_IDS[i], isNext ? bold(prayer.time) : prayer.time);
             views.setTextColor(NAME_IDS[i], color);
             views.setTextColor(TIME_IDS[i], color);
         }
         return views;
+    }
+
+    private static void showCountdown(RemoteViews views, int viewId, long at, long now) {
+        long base = SystemClock.elapsedRealtime() + (at - now);
+        views.setChronometerCountDown(viewId, true);
+        views.setChronometer(viewId, base, null, true);
     }
 
     private static void showMessage(Context context, RemoteViews views, WidgetData data) {

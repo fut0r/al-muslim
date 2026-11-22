@@ -15,6 +15,14 @@ import { isJumuah, PRAYER_IDS, type DayTimes } from './prayer/types';
 import { angleDelta, compassPoint, distanceToKaabaKm, headingFromOrientation, qiblaBearing } from './qibla';
 import { addRange, countAyahs, minimumReadingTime, sanitizeRanges } from './quran/progress';
 import { ayahStartSeconds, isValidTimings, positionAt, recitationUrl } from './quran/recitation';
+import {
+  ayahBodyStartSeconds,
+  ayahEndSeconds,
+  changeVolume,
+  clampVolume,
+  nextAyahRepeat,
+  stepPlayback,
+} from './playback';
 import { buildSearchIndex, normalizeArabic, searchAyahs } from './quran/search';
 import { ayahOrdinal, TOTAL_AYAHS, type SurahInfo } from './quran/types';
 import { addDays, civilDateInZone, civilToJdn, jdnToCivil, weekdayOf } from './time';
@@ -450,5 +458,38 @@ describe('recitation timings', () => {
     expect(positionAt(timings, 20)).toEqual({ ayah: 3, leadIn: false });
     // After the last ayah ends the recording may still run for a moment.
     expect(positionAt(timings, 60)).toEqual({ ayah: 3, leadIn: false });
+  });
+});
+
+describe('playback', () => {
+  const timings = [4000, 10_000, 15_000, 21_000];
+
+  it('steps the volume by a tenth and stays inside 0–1', () => {
+    expect(clampVolume(0.26)).toBe(0.3);
+    expect(clampVolume(0.24)).toBe(0.2);
+    expect(clampVolume(2)).toBe(1);
+    expect(clampVolume(-0.4)).toBe(0);
+    expect(clampVolume(Number.NaN)).toBe(1);
+    expect(changeVolume(0.5, -1)).toBe(0.4);
+    expect(changeVolume(1, 1)).toBe(1);
+    expect(changeVolume(0, -1)).toBe(0);
+  });
+
+  it('cycles the ayah repeat and knows when another pass is due', () => {
+    expect(nextAyahRepeat(1)).toBe(2);
+    expect(nextAyahRepeat(10)).toBe(0);
+    expect(nextAyahRepeat(0)).toBe(1);
+    expect(ayahEndSeconds(timings, 2)).toBe(15);
+    expect(ayahBodyStartSeconds(timings, 1)).toBe(4);
+    expect(ayahBodyStartSeconds(timings, 2)).toBe(10);
+
+    expect(stepPlayback(timings, 1, 1, 1, 9)).toEqual({ ayah: 1, leadIn: false, repeatAyah: null, take: 1 });
+    expect(stepPlayback(timings, 1, 1, 1, 3)).toEqual({ ayah: 1, leadIn: true, repeatAyah: null, take: 1 });
+    expect(stepPlayback(timings, 1, 1, 3, 10)).toEqual({ ayah: 1, leadIn: false, repeatAyah: 1, take: 2 });
+    expect(stepPlayback(timings, 1, 3, 3, 10)).toEqual({ ayah: 2, leadIn: false, repeatAyah: null, take: 1 });
+    expect(stepPlayback(timings, 2, 1, 2, 14.9)).toEqual({ ayah: 2, leadIn: false, repeatAyah: null, take: 1 });
+    expect(stepPlayback(timings, 2, 1, 2, 14.97)).toEqual({ ayah: 2, leadIn: false, repeatAyah: 2, take: 2 });
+    expect(stepPlayback(timings, 3, 4, 0, 21)).toEqual({ ayah: 3, leadIn: false, repeatAyah: 3, take: 5 });
+    expect(stepPlayback(timings, 3, 2, 2, 21)).toEqual({ ayah: 3, leadIn: false, repeatAyah: null, take: 2 });
   });
 });

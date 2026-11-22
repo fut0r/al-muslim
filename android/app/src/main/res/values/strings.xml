@@ -17,6 +17,8 @@
     <string name="widget_open_app">Open Al-Muslim to show prayer times</string>
     <string name="widget_sample_prayer">Asr</string>
     <string name="widget_sample_time">3:07 PM</string>
+    <string name="widget_sample_location">Alexandria</string>
+    <string name="widget_sample_hijri">24 Rabi\' al-Thani</string>
     <string name="widget_fajr">Fajr</string>
     <string name="widget_sunrise">Sunrise</string>
     <string name="widget_dhuhr">Dhuhr</string>

@@ -1,4 +1,5 @@
 import { DEFAULT_RECITER, RECITER_IDS, type ReciterId } from '@/data/reciters';
+import { clampVolume, isAyahRepeat, PLAYBACK_VOLUME, type AyahRepeat } from '@/domain/playback';
 import {
   DEFAULT_CALCULATION_METHOD,
   isCalculationMethodId,
@@ -43,6 +44,10 @@ export interface Settings {
   quranFontScale: number;
   /** Whose recitation is played when listening to the Quran. */
   reciter: ReciterId;
+  /** How many times each ayah is heard. 1 is once; 0 repeats until you move on. */
+  ayahRepeat: AyahRepeat;
+  /** Loudness of recitation and the adhan inside the app, from 0 to 1. */
+  playbackVolume: number;
   onboarded: boolean;
 }
 
@@ -94,6 +99,8 @@ export function sanitizeSettings(raw: unknown): Settings {
       QURAN_FONT_SCALE.default,
     ),
     reciter: oneOf(data.reciter, RECITER_IDS, DEFAULT_RECITER),
+    ayahRepeat: isAyahRepeat(data.ayahRepeat) ? data.ayahRepeat : 1,
+    playbackVolume: clampVolume(typeof data.playbackVolume === 'number' ? data.playbackVolume : PLAYBACK_VOLUME.default),
     onboarded: asBoolean(data.onboarded, false),
   };
 }

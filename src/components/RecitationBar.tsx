@@ -1,6 +1,7 @@
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import PauseOutlined from '@mui/icons-material/PauseOutlined';
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
+import RepeatOutlined from '@mui/icons-material/RepeatOutlined';
 import SkipNextOutlined from '@mui/icons-material/SkipNextOutlined';
 import SkipPreviousOutlined from '@mui/icons-material/SkipPreviousOutlined';
 import Box from '@mui/material/Box';
@@ -10,26 +11,42 @@ import IconButton from '@mui/material/IconButton';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { nextAyahRepeat, type AyahRepeat } from '@/domain/playback';
 import type { Recitation } from '@/hooks/useRecitation';
 import { useI18n } from '@/i18n';
 import { LAYOUT, SAFE_AREA, gutter } from '@/theme/tokens';
+import { PlaybackVolume } from './PlaybackVolume';
 
 /** Height the bar occupies, so the page can leave room for it. */
-export const RECITATION_BAR_SPACE = 76;
+export const RECITATION_BAR_SPACE = 120;
 
 interface RecitationBarProps {
   recitation: Recitation;
   reciterName: string;
   /** Whether the surah opens with a basmalah that is not one of its ayahs. */
   basmalah: boolean;
+  repeat: AyahRepeat;
+  volume: number;
+  onRepeat(next: AyahRepeat): void;
+  onVolume(next: number): void;
   onChooseReciter(): void;
 }
 
 /**
  * Playback controls for listening to the surah. It sits above the bottom
  * navigation while something is playing and disappears when playback stops.
+ * Repeat and volume live here, with the rest of the player.
  */
-export function RecitationBar({ recitation, reciterName, basmalah, onChooseReciter }: RecitationBarProps) {
+export function RecitationBar({
+  recitation,
+  reciterName,
+  basmalah,
+  repeat,
+  volume,
+  onRepeat,
+  onVolume,
+  onChooseReciter,
+}: RecitationBarProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const wide = useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
@@ -38,13 +55,18 @@ export function RecitationBar({ recitation, reciterName, basmalah, onChooseRecit
 
   const failed = state.status === 'error';
   const playing = state.status === 'playing' || state.status === 'loading';
+  const place = state.leadIn && basmalah ? t('quran.basmalah') : t('quran.playingAyah', { ayah: state.ayah });
+  const repetition =
+    repeat === 1 ? null : repeat === 0 ? t('quran.repeatLooping') : t('quran.repeatProgress', { current: state.take, count: repeat });
   const detail = failed
     ? t(state.error === 'offline' ? 'quran.audioOffline' : 'quran.audioFailed')
     : state.status === 'loading'
       ? t('quran.audioLoading')
-      : state.leadIn && basmalah
-        ? t('quran.basmalah')
-        : t('quran.playingAyah', { ayah: state.ayah });
+      : repetition
+        ? `${place} · ${repetition}`
+        : place;
+  const repeatLabel =
+    repeat === 0 ? t('quran.repeatForever') : repeat === 1 ? t('quran.repeatOnce') : t('quran.repeatTimes', { count: repeat });
 
   return (
     <Box
@@ -65,61 +87,79 @@ export function RecitationBar({ recitation, reciterName, basmalah, onChooseRecit
           pointerEvents: 'auto',
           mx: 'auto',
           maxWidth: LAYOUT.contentMaxWidth,
-          minHeight: 60,
           display: 'flex',
-          alignItems: 'center',
-          gap: 0.25,
-          pl: 0.5,
-          pr: 0.5,
+          flexDirection: 'column',
+          px: 0.5,
+          py: 0.25,
           bgcolor: 'background.paper',
           border: 1,
           borderColor: failed ? 'error.main' : 'divider',
           borderRadius: 1,
         }}
       >
-        <ButtonBase
-          onClick={onChooseReciter}
-          aria-label={t('quran.changeReciter', { name: reciterName })}
-          sx={{ flex: 1, minWidth: 0, display: 'block', textAlign: 'start', px: 1.25, py: 0.75, borderRadius: 1 }}
-        >
-          <Typography variant="subtitle2" component="span" noWrap sx={{ display: 'block' }}>
-            {reciterName}
-          </Typography>
-          <Typography
-            variant="caption"
-            component="span"
-            color={failed ? 'error' : 'textSecondary'}
-            role={failed ? 'alert' : 'status'}
-            noWrap={!failed}
-            sx={{ display: 'block' }}
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+          <ButtonBase
+            onClick={onChooseReciter}
+            aria-label={t('quran.changeReciter', { name: reciterName })}
+            sx={{ flex: 1, minWidth: 0, display: 'block', textAlign: 'start', px: 1.25, py: 0.5, borderRadius: 1 }}
           >
-            {detail}
-          </Typography>
-        </ButtonBase>
-
-        {/* Transport controls keep their usual left-to-right order in every language. */}
-        <Box dir="ltr" sx={{ display: 'flex', flexShrink: 0 }}>
-          <IconButton onClick={recitation.previous} aria-label={t('quran.previousAyah')} color="inherit">
-            <SkipPreviousOutlined />
-          </IconButton>
-          <IconButton
-            onClick={playing ? recitation.pause : recitation.resume}
-            aria-label={playing ? t('quran.pause') : t('quran.play')}
-            color="primary"
-            sx={{ position: 'relative' }}
-          >
-            {playing ? <PauseOutlined /> : <PlayArrowOutlined />}
-            {state.status === 'loading' && (
-              <CircularProgress size={40} thickness={2} aria-hidden sx={{ position: 'absolute', inset: 2 }} />
-            )}
-          </IconButton>
-          <IconButton onClick={recitation.next} aria-label={t('quran.nextAyah')} color="inherit">
-            <SkipNextOutlined />
+            <Typography variant="subtitle2" component="span" noWrap sx={{ display: 'block' }}>
+              {reciterName}
+            </Typography>
+            <Typography
+              variant="caption"
+              component="span"
+              color={failed ? 'error' : 'textSecondary'}
+              role={failed ? 'alert' : 'status'}
+              noWrap={!failed}
+              sx={{ display: 'block' }}
+            >
+              {detail}
+            </Typography>
+          </ButtonBase>
+          <IconButton onClick={recitation.stop} aria-label={t('quran.stopListening')} color="inherit">
+            <CloseOutlined />
           </IconButton>
         </Box>
-        <IconButton onClick={recitation.stop} aria-label={t('quran.stopListening')} color="inherit">
-          <CloseOutlined />
-        </IconButton>
+
+        {/* Transport controls keep their usual left-to-right order in every language. */}
+        <Box dir="ltr" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.5 }}>
+          <PlaybackVolume volume={volume} onChange={onVolume} />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              onClick={() => onRepeat(nextAyahRepeat(repeat))}
+              aria-label={repeatLabel}
+              aria-pressed={repeat !== 1}
+              color={repeat !== 1 ? 'primary' : 'inherit'}
+            >
+              <RepeatOutlined />
+            </IconButton>
+            <Typography
+              variant="caption"
+              aria-hidden
+              sx={{ minWidth: 32, textAlign: 'center', color: repeat !== 1 ? 'primary.main' : 'text.secondary' }}
+            >
+              {repeat === 0 ? t('quran.repeatContinuous') : repeat}
+            </Typography>
+            <IconButton onClick={recitation.previous} aria-label={t('quran.previousAyah')} color="inherit">
+              <SkipPreviousOutlined />
+            </IconButton>
+            <IconButton
+              onClick={playing ? recitation.pause : recitation.resume}
+              aria-label={playing ? t('quran.pause') : t('quran.play')}
+              color="primary"
+              sx={{ position: 'relative' }}
+            >
+              {playing ? <PauseOutlined /> : <PlayArrowOutlined />}
+              {state.status === 'loading' && (
+                <CircularProgress size={40} thickness={2} aria-hidden sx={{ position: 'absolute', inset: 2 }} />
+              )}
+            </IconButton>
+            <IconButton onClick={recitation.next} aria-label={t('quran.nextAyah')} color="inherit">
+              <SkipNextOutlined />
+            </IconButton>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

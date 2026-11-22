@@ -1,0 +1,15 @@
+The tafsir in this folder is Al-Mukhtasar in Interpreting the Noble Quran
+(المختصر في تفسير القرآن الكريم), in Arabic (ar/) and English (en/).
+One file per surah, one string per ayah, in ayah order. An empty string means
+that edition has no separate note for that ayah; the gap is kept, not filled.
+
+Publisher: Tafsir Center for Quranic Studies (مركز تفسير للدراسات القرآنية)
+https://tafsir.net
+
+The text is a verbatim copy of editions ar-tafsir-al-mukhtasar and
+en-tafsir-al-mukhtasar from https://github.com/spa5k/tafsir_api tag v1.2.3,
+which redistributes the Quranic Universal Library export
+(https://qul.tarteel.ai, resources 251 and 266).
+
+Attribute the Tafsir Center when you share it. Do not edit the wording.
+Regenerate with: npm run data:tafsir

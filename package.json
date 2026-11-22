@@ -31,6 +31,7 @@
     "data:quran": "node scripts/build-quran-data.mjs",
     "data:recitation": "node scripts/build-recitation-data.mjs",
     "data:cities": "node scripts/build-cities-data.mjs",
+    "data:tafsir": "node scripts/build-tafsir-data.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "android:sync": "npm run build && node scripts/sync-android-assets.mjs && cap sync android",
     "android:open": "cap open android"

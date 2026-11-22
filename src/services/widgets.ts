@@ -36,7 +36,7 @@ export interface WidgetPayload {
   /** IANA zone of the location, or null to use the device zone. */
   timeZone: string | null;
   location: string;
-  labels: { nextPrayer: string; today: string; open: string };
+  labels: { nextPrayer: string; today: string; open: string; remaining: string };
   /** Shown instead of prayer times when there is nothing to show (no location yet). */
   message: string | null;
   days: WidgetDay[];
@@ -67,6 +67,7 @@ export function buildWidgetPayload(input: WidgetPayloadInput): WidgetPayload {
       nextPrayer: i18n.t('home.nextPrayer'),
       today: i18n.t('home.todaysTimes'),
       open: i18n.t('widgets.openApp'),
+      remaining: i18n.t('widgets.remaining'),
     },
     message: location ? null : i18n.t('widgets.setLocation'),
     days: [],

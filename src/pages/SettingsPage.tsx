@@ -14,6 +14,7 @@ import { LocationDialog, locationLabel } from '@/components/LocationDialog';
 import { formatMoment, NotificationStatusDialog } from '@/components/NotificationStatusDialog';
 import { PageContent } from '@/components/Page';
 import { ChoiceDialog, SegmentedControl, SettingItem, SettingsSection, SwitchItem } from '@/components/settings';
+import { TAFSIR } from '@/data/tafsir';
 import { getReciter, RECITERS } from '@/data/reciters';
 import { OBLIGATORY_PRAYER_IDS } from '@/domain/prayer/types';
 import { TOTAL_AYAHS } from '@/domain/quran/types';
@@ -388,6 +389,7 @@ export default function SettingsPage() {
           <SettingItem label={t('settings.repository')} description={t('settings.repositoryValue')} href={REPOSITORY_URL} />
           <SettingItem label={t('settings.privacy')} description={t('settings.privacyValue')} />
           <SettingItem label={t('settings.quranText')} description={t('settings.quranTextValue')} href={TANZIL_URL} />
+          <SettingItem label={t('settings.tafsir')} description={t('settings.tafsirValue')} href={TAFSIR.url} />
           <SettingItem label={t('settings.credits')} description={t('settings.creditsValue')} />
         </SettingsSection>
       </PageContent>

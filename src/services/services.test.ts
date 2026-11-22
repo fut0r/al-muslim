@@ -66,6 +66,7 @@ describe('widget schedule', () => {
     expect(payload.message).toBeNull();
     expect(payload.rtl).toBe(false);
     expect(payload.timeZone).toBe('Africa/Cairo');
+    expect(payload.labels.remaining).toBe('Time remaining');
     expect(payload.days).toHaveLength(WIDGET_HORIZON_DAYS);
     expect(payload.days[0]!.date).toBe('2026-10-05');
     expect(payload.days[29]!.date).toBe('2026-11-03');
@@ -85,6 +86,7 @@ describe('widget schedule', () => {
     const payload = buildWidgetPayload({ ...base, i18n: createI18n('ar'), location: cairo, locationLabel: 'القاهرة' });
     expect(payload.rtl).toBe(true);
     expect(payload.labels.nextPrayer).toBe('الصلاة القادمة');
+    expect(payload.labels.remaining).toBe('الوقت المتبقي');
     expect(payload.days[0]!.prayers[0]!.name).toBe('الفجر');
   });
 
@@ -95,5 +97,29 @@ describe('widget schedule', () => {
     expect(midday('2026-10-09')).toBe('الجمعة');
     expect(midday('2026-10-10')).toBe('الظهر');
     expect(payload.days.filter((day) => day.prayers[2]!.name === 'الجمعة')).toHaveLength(4);
+  });
+});
+
+describe('tafsir', () => {
+  const gaps = ['2:3', '4:98', '14:49', '37:165', '42:49'];
+
+  it('ships Al-Mukhtasar for every ayah, with the publisher named', () => {
+    const empty: string[] = [];
+    for (const surah of surahs) {
+      for (const language of ['ar', 'en'] as const) {
+        const text = JSON.parse(readFileSync(`public/data/tafsir/${language}/${surah.id}.json`, 'utf8')) as unknown[];
+        expect(text, `${language} ${surah.id}`).toHaveLength(surah.ayahs);
+        text.forEach((ayah, index) => {
+          expect(typeof ayah, `${language} ${surah.id}:${index + 1}`).toBe('string');
+          if (ayah === '') empty.push(`${language} ${surah.id}:${index + 1}`);
+        });
+      }
+    }
+    expect(empty).toEqual(gaps.map((ref) => `en ${ref}`));
+    const arabic = JSON.parse(readFileSync('public/data/tafsir/ar/1.json', 'utf8')) as string[];
+    const english = JSON.parse(readFileSync('public/data/tafsir/en/1.json', 'utf8')) as string[];
+    expect(arabic[0]).toMatch(/^باسم الله أبدأ قراءة القرآن/);
+    expect(english[0]).toMatch(/^I begin by calling on Allah/);
+    expect(readFileSync('public/data/tafsir/NOTICE.txt', 'utf8')).toContain('https://tafsir.net');
   });
 });

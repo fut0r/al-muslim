@@ -1,3 +1,4 @@
+import { clampVolume } from '@/domain/playback';
 import { assetUrl, isNative } from './platform';
 
 const ADHAN_PATH = 'audio/adhan.mp3';
@@ -12,6 +13,7 @@ export interface AdhanState {
 let state: AdhanState = { playing: false, label: '' };
 let audio: HTMLAudioElement | null = null;
 let source: Promise<string> | null = null;
+let volume = 1;
 const listeners = new Set<() => void>();
 
 function setState(next: AdhanState): void {
@@ -63,6 +65,7 @@ export const adhanPlayer = {
   async play(label = ''): Promise<boolean> {
     try {
       audio ??= new Audio();
+      audio.volume = volume;
       audio.onended = () => setState({ playing: false, label: '' });
       audio.onerror = () => setState({ playing: false, label: '' });
       audio.src = await resolveSource();
@@ -82,5 +85,11 @@ export const adhanPlayer = {
       audio.currentTime = 0;
     }
     if (state.playing) setState({ playing: false, label: '' });
+  },
+
+  /** The same in-app loudness the recitation uses. */
+  setVolume(next: number): void {
+    volume = clampVolume(next);
+    if (audio) audio.volume = volume;
   },
 };

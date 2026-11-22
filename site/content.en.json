@@ -56,7 +56,7 @@
     "title": "Everything a Muslim needs each day, and nothing more",
     "prayer": {
       "title": "Prayer times",
-      "body": "Calculated on your device with twelve recognised methods, Shafi'i or Hanafi Asr, and correct time zones and daylight saving."
+      "body": "Calculated on your device with seventeen recognised methods, Shafi'i or Hanafi Asr, and correct time zones and daylight saving."
     },
     "adhan": {
       "title": "Adhan at every prayer",
@@ -64,11 +64,11 @@
     },
     "quran": {
       "title": "The Quran",
-      "body": "All 114 surahs in Uthmani script, with search in everyday Arabic, bookmarks, your reading position and adjustable text size."
+      "body": "All 114 surahs in Uthmani script, with search in everyday Arabic, bookmarks, your reading position, adjustable text size, and a short tafsir of each ayah."
     },
     "audio": {
       "title": "Seven reciters",
-      "body": "Listen to Abdul Basit, Al-Husary, Al-Minshawi, As-Sudais, Al-Muaiqly, Al-Ghamdi or Alafasy. The text follows along ayah by ayah, and the recitation keeps playing when you leave the app."
+      "body": "Listen to Abdul Basit, Al-Husary, Al-Minshawi, As-Sudais, Al-Muaiqly, Al-Ghamdi or Alafasy. The text follows along ayah by ayah. Repeat an ayah, and change the volume in the app. The recitation keeps playing when you leave."
     },
     "adhkar": {
       "title": "Adhkar",
@@ -84,7 +84,7 @@
     },
     "widgets": {
       "title": "Home screen widgets",
-      "body": "The next prayer with a live countdown, or all of today's times, on your Android home screen."
+      "body": "The next prayer with the Hijri date and a live countdown, or today's times and how long is left, on your Android home screen."
     }
   },
   "privacy": {

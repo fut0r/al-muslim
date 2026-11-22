@@ -1,3 +1,12 @@
+import {
+  ayahBodyStartSeconds,
+  ayahEndSeconds,
+  clampVolume,
+  REPEAT_LEAD_SECONDS,
+  shouldRepeatAyah,
+  stepPlayback,
+  type AyahRepeat,
+} from '@/domain/playback';
 import { ayahStartSeconds, positionAt, type SurahTimings } from '@/domain/quran/recitation';
 
 export type RecitationStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
@@ -10,6 +19,8 @@ export interface RecitationState {
   leadIn: boolean;
   /** Why playback stopped, when status is "error". */
   error: 'offline' | 'failed' | null;
+  /** Which time this ayah has been started, counting the current pass. */
+  take: number;
 }
 
 /** One surah's recording by one reciter, with the moment each ayah begins. */
@@ -18,15 +29,17 @@ export interface RecitationTrack {
   timings: SurahTimings;
 }
 
-const IDLE: RecitationState = { status: 'idle', ayah: null, leadIn: false, error: null };
+const IDLE: RecitationState = { status: 'idle', ayah: null, leadIn: false, error: null, take: 1 };
 
 /**
  * Plays one surah's recording and follows it ayah by ayah.
  *
  * The audio is a single stream per surah; ayah timings turn the playback
  * position into the ayah on screen, and an ayah into a place to seek to.
- * Streaming is the one part of the app that needs a connection, and every
- * failure ends in a clear state the screen can explain.
+ * When an ayah is set to repeat, it is heard again from its own beginning
+ * before the next one starts. Streaming is the one part of the app that
+ * needs a connection, and every failure ends in a clear state the screen
+ * can explain.
  */
 export class RecitationPlayer {
   private audio: HTMLAudioElement | null = null;
@@ -38,6 +51,11 @@ export class RecitationPlayer {
   private pendingSeek: number | null = null;
   /** Identifies the latest request, so a slow answer to an older one is ignored. */
   private request = 0;
+  private repeat: AyahRepeat = 1;
+  private volume = 1;
+  /** Keeps a repeat from firing twice on the same boundary. */
+  private lastReplayAt = 0;
+  private repeatTimer = 0;
   private state: RecitationState = IDLE;
   private readonly listeners = new Set<() => void>();
 
@@ -54,7 +72,8 @@ export class RecitationPlayer {
     this.loadTrack = load;
     // Whatever is still playing no longer says which ayah is current.
     this.track = null;
-    this.setState({ status: 'loading', ayah, leadIn: false, error: null });
+    this.clearRepeatTimer();
+    this.setState({ status: 'loading', ayah, leadIn: false, error: null, take: 1 });
     load().then(
       (track) => {
         if (request === this.request) this.start(track, ayah);
@@ -93,7 +112,8 @@ export class RecitationPlayer {
     if (!track || this.state.status === 'idle' || !Number.isFinite(seconds)) return;
     this.pendingSeek = Math.max(0, seconds);
     const position = positionAt(track.timings, this.pendingSeek);
-    this.setState({ ...this.state, ayah: position.ayah, leadIn: position.leadIn, error: null });
+    this.lastReplayAt = 0;
+    this.setState({ ...this.state, ayah: position.ayah, leadIn: position.leadIn, error: null, take: 1 });
     this.applySeek();
   }
 
@@ -110,6 +130,19 @@ export class RecitationPlayer {
     };
   }
 
+  /** How many times the current ayah is heard. 1 is once; 0 repeats until you move on. */
+  setRepeat(repeat: AyahRepeat): void {
+    if (this.repeat === repeat) return;
+    this.repeat = repeat;
+    this.armBoundary();
+  }
+
+  /** The app's own loudness, from 0 to 1. It does not change the device volume. */
+  setVolume(volume: number): void {
+    this.volume = clampVolume(volume);
+    if (this.audio) this.audio.volume = this.volume;
+  }
+
   /** Switches to another recording of the same surah and carries on from the current ayah. */
   changeSource(load: () => Promise<RecitationTrack>): void {
     if (this.state.status === 'idle' || this.state.ayah === null) return;
@@ -118,10 +151,12 @@ export class RecitationPlayer {
 
   stop(): void {
     this.request += 1;
+    this.clearRepeatTimer();
     this.pendingSeek = null;
     this.track = null;
     this.loadTrack = null;
     this.loadedUrl = null;
+    this.lastReplayAt = 0;
     if (this.audio) {
       this.audio.pause();
       this.audio.removeAttribute('src');
@@ -136,7 +171,8 @@ export class RecitationPlayer {
       previous.status === next.status &&
       previous.ayah === next.ayah &&
       previous.leadIn === next.leadIn &&
-      previous.error === next.error
+      previous.error === next.error &&
+      previous.take === next.take
     ) {
       return;
     }
@@ -152,16 +188,35 @@ export class RecitationPlayer {
     if (this.audio) return this.audio;
     const audio = new Audio();
     audio.preload = 'auto';
+    audio.volume = this.volume;
     audio.addEventListener('loadedmetadata', () => this.applySeek());
     audio.addEventListener('timeupdate', () => this.follow());
     audio.addEventListener('seeked', () => this.follow());
-    audio.addEventListener('playing', () => this.update('playing'));
+    audio.addEventListener('playing', () => {
+      this.update('playing');
+      this.armBoundary();
+    });
     audio.addEventListener('waiting', () => this.update('loading'));
     audio.addEventListener('pause', () => {
+      this.clearRepeatTimer();
       // Reaching the end also fires "pause"; "ended" handles that case.
       if (!audio.ended && this.state.status !== 'idle' && this.state.status !== 'error') this.update('paused');
     });
-    audio.addEventListener('ended', () => this.stop());
+    audio.addEventListener('ended', () => {
+      if (this.pendingSeek !== null || audio.seeking) return;
+      const ayah = this.state.ayah;
+      const moving = this.state.status === 'playing' || this.state.status === 'loading';
+      if (
+        ayah !== null &&
+        moving &&
+        shouldRepeatAyah(this.repeat, this.state.take) &&
+        performance.now() - this.lastReplayAt >= 300
+      ) {
+        this.seekToAyah(ayah, this.state.take + 1, true);
+        return;
+      }
+      this.stop();
+    });
     audio.addEventListener('error', () => this.fail());
     this.audio = audio;
     return audio;
@@ -172,7 +227,13 @@ export class RecitationPlayer {
     const target = Math.min(Math.max(1, ayah), count);
     this.track = track;
     this.pendingSeek = ayahStartSeconds(track.timings, target);
-    this.setState({ status: 'loading', ayah: target, leadIn: this.pendingSeek < track.timings[0]! / 1000, error: null });
+    this.setState({
+      status: 'loading',
+      ayah: target,
+      leadIn: this.pendingSeek < track.timings[0]! / 1000,
+      error: null,
+      take: 1,
+    });
 
     const audio = this.element();
     if (this.loadedUrl !== track.url) {
@@ -183,13 +244,29 @@ export class RecitationPlayer {
     this.begin();
   }
 
-  private seekToAyah(ayah: number): void {
+  /**
+   * `fromBody` repeats an ayah from its own first word. The first play of
+   * ayah 1 still starts at the beginning of the file, so the lead-in is heard.
+   */
+  private seekToAyah(ayah: number, take = 1, fromBody = false): void {
     const track = this.track;
     if (!track || this.state.status === 'idle') return;
     const count = track.timings.length - 1;
     const target = Math.min(Math.max(1, ayah), count);
-    this.pendingSeek = ayahStartSeconds(track.timings, target);
-    this.setState({ ...this.state, status: 'loading', ayah: target, leadIn: this.pendingSeek < track.timings[0]! / 1000, error: null });
+    this.pendingSeek = (fromBody ? ayahBodyStartSeconds : ayahStartSeconds)(track.timings, target);
+    this.lastReplayAt = fromBody ? performance.now() : 0;
+    const audio = this.element();
+    const buffered = audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA;
+    const status =
+      buffered && (this.state.status === 'playing' || this.state.status === 'paused') ? this.state.status : 'loading';
+    this.setState({
+      ...this.state,
+      status,
+      ayah: target,
+      leadIn: this.pendingSeek < track.timings[0]! / 1000,
+      error: null,
+      take,
+    });
     this.applySeek();
     this.begin();
   }
@@ -217,19 +294,54 @@ export class RecitationPlayer {
       });
   }
 
-  /** Keeps the current ayah in step with the audio. */
+  /** Keeps the current ayah in step with the audio, and repeats it when that is what was asked. */
   private follow(): void {
     const audio = this.audio;
     const track = this.track;
     // While a seek is waiting or under way the position is not yet meaningful.
     if (!audio || !track || this.pendingSeek !== null || audio.seeking || this.state.status === 'idle') return;
-    if (this.state.status === 'error') return;
-    const position = positionAt(track.timings, audio.currentTime);
-    this.setState({ ...this.state, ayah: position.ayah, leadIn: position.leadIn });
+    if (this.state.status === 'error' || this.state.ayah === null) return;
+    const step = stepPlayback(track.timings, this.state.ayah, this.state.take, this.repeat, audio.currentTime);
+    if (step.repeatAyah !== null) {
+      const moving = this.state.status === 'playing' || this.state.status === 'loading';
+      if (moving && performance.now() - this.lastReplayAt >= 300) this.seekToAyah(step.repeatAyah, step.take, true);
+      return;
+    }
+    this.setState({ ...this.state, ayah: step.ayah, leadIn: step.leadIn, take: step.take });
+    this.armBoundary();
+  }
+
+  /**
+   * Wakes just before the ayah ends. timeupdate is a few times a second, which
+   * is long enough to play into the next ayah before a repeat can seek back.
+   */
+  private armBoundary(): void {
+    this.clearRepeatTimer();
+    if (typeof window === 'undefined') return;
+    const audio = this.audio;
+    const track = this.track;
+    const ayah = this.state.ayah;
+    if (!audio || !track || ayah === null || this.pendingSeek !== null || audio.seeking) return;
+    if (this.state.status !== 'playing' && this.state.status !== 'loading') return;
+    if (!shouldRepeatAyah(this.repeat, this.state.take)) return;
+    const end = ayahEndSeconds(track.timings, ayah);
+    const delay = (end - audio.currentTime - REPEAT_LEAD_SECONDS) * 1000;
+    if (!Number.isFinite(delay) || delay < 0 || delay > 2 * 60 * 60 * 1000) return;
+    this.repeatTimer = window.setTimeout(() => {
+      this.repeatTimer = 0;
+      this.follow();
+    }, delay);
+  }
+
+  private clearRepeatTimer(): void {
+    if (this.repeatTimer === 0 || typeof window === 'undefined') return;
+    window.clearTimeout(this.repeatTimer);
+    this.repeatTimer = 0;
   }
 
   private fail(): void {
     if (this.state.status === 'idle') return;
+    this.clearRepeatTimer();
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
     this.loadedUrl = null; // Fetch the recording afresh when the user tries again.
     this.setState({ ...this.state, status: 'error', error: offline ? 'offline' : 'failed' });

@@ -44,7 +44,7 @@ export function useMediaControls(recitation: Recitation, info: NowPlayingInfo): 
       },
       { channel, play, pause: pauseLabel, next: nextLabel, previous: previousLabel, stop: stopLabel },
     );
-  }, [active, state.status, title, artist, album, hasNext, progress, channel, play, pauseLabel, nextLabel, previousLabel, stopLabel]);
+  }, [active, state.status, state.take, title, artist, album, hasNext, progress, channel, play, pauseLabel, nextLabel, previousLabel, stopLabel]);
 
   // Gone when playback stops or the screen is left.
   useEffect(() => {
