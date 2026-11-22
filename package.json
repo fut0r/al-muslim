@@ -1,7 +1,7 @@
 {
   "name": "al-muslim",
   "private": true,
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Al-Muslim — a free, open-source, privacy-first Islamic companion: prayer times, Quran, adhkar, qiblah and Hijri calendar. Works offline.",
   "license": "GPL-3.0-only",
   "author": "Zyad Mohamed",
